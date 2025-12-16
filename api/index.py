@@ -1,6 +1,6 @@
 """
 Vercel serverless function entry point for Flask app
-Simple function handler to avoid Vercel's issubclass() inspection
+Direct Flask app export - simplest possible approach
 """
 import sys
 import os
@@ -31,6 +31,8 @@ def handle_exceptions(e):
     from flask import jsonify
     return jsonify({'error': 'Internal server error'}), 500
 
-# Export as simple function - Vercel won't try to inspect functions with issubclass()
-# This is a WSGI callable that delegates to Flask app
-handler = lambda environ, start_response: app(environ, start_response)
+# CRITICAL FIX: Export Flask app's __call__ method directly
+# This creates a bound method that Vercel should handle correctly
+# The bound method's class is types.MethodType, not Flask, so issubclass() won't fail
+import types
+handler = types.MethodType(app.__call__, app)
