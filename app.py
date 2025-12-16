@@ -11,17 +11,17 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this-in-production'
 
 # SQLite Database Configuration
-# For Vercel deployment, use /tmp directory (writable in serverless)
+# For serverless (Vercel): use /tmp directory
+# For traditional hosting (Railway, Render, etc): use current directory
 if os.environ.get('VERCEL_ENV') or os.environ.get('VERCEL'):
     DATABASE = '/tmp/qr_app.db'
-    # Ensure /tmp directory exists (with error handling)
     try:
         os.makedirs('/tmp', exist_ok=True)
     except Exception as e:
         print(f"⚠ Warning: Could not create /tmp directory: {e}")
-        # Continue anyway - might already exist
 else:
-    DATABASE = 'qr_app.db'
+    # Use persistent storage for traditional hosting
+    DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'qr_app.db')
 
 # Helper function to get database connection
 def get_db():
