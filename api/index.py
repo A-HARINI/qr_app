@@ -31,21 +31,20 @@ def handle_exceptions(e):
     from flask import jsonify
     return jsonify({'error': 'Internal server error'}), 500
 
-# Create a WSGI wrapper class that Vercel can properly inspect
-# This workaround fixes the issubclass() error in Vercel's handler
-class VercelFlaskWrapper:
-    """Wrapper class to fix Vercel's issubclass() inspection issue"""
+# Create a simple WSGI wrapper with clean inheritance
+# Inherit from object to ensure clean MRO for Vercel's inspection
+class VercelWSGIHandler(object):
+    """WSGI handler wrapper with clean class hierarchy for Vercel"""
     def __init__(self, flask_app):
-        self.app = flask_app
+        self._app = flask_app
     
     def __call__(self, environ, start_response):
-        """WSGI interface - delegate to Flask app"""
-        return self.app(environ, start_response)
+        """WSGI interface"""
+        return self._app(environ, start_response)
     
-    # Make this class look like Flask for Vercel's inspection
+    # Delegate all other attributes to Flask app
     def __getattr__(self, name):
-        """Delegate attribute access to Flask app"""
-        return getattr(self.app, name)
+        return getattr(self._app, name)
 
-# Export wrapped handler - this should pass Vercel's issubclass() check
-handler = VercelFlaskWrapper(app)
+# Export handler - clean class that Vercel can inspect
+handler = VercelWSGIHandler(app)
