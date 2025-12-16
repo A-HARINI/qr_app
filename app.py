@@ -926,6 +926,7 @@ def ensure_db_initialized():
         _db_init_attempted = True
         try:
             print("Initializing database...")
+            print(f"Database path: {DATABASE}")
             init_db()
             _db_init_success = True
             print("✓ Database initialized successfully")
@@ -935,6 +936,16 @@ def ensure_db_initialized():
             traceback.print_exc()
             # Don't mark as success, but don't retry immediately to avoid loops
             # Will retry on next request if needed
+
+# Initialize database on startup for Railway/Render (not serverless)
+# This ensures database is ready before first request
+if not (os.environ.get('VERCEL_ENV') or os.environ.get('VERCEL')):
+    try:
+        print("=== Initializing database on startup ===")
+        ensure_db_initialized()
+        print("=== Database ready ===")
+    except Exception as e:
+        print(f"⚠ Database init on startup failed, will retry on first request: {e}")
 
 # Initialize database when running locally
 if __name__ == '__main__':
