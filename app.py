@@ -13,8 +13,10 @@ app.secret_key = 'your-secret-key-change-this-in-production'
 # SQLite Database Configuration
 # For Vercel deployment, use /tmp directory (writable in serverless)
 import os
-if os.environ.get('VERCEL'):
+if os.environ.get('VERCEL_ENV') or os.environ.get('VERCEL'):
     DATABASE = '/tmp/qr_app.db'
+    # Ensure /tmp directory exists
+    os.makedirs('/tmp', exist_ok=True)
 else:
     DATABASE = 'qr_app.db'
 
@@ -878,14 +880,16 @@ def get_product_image_url(category, color):
         # If outside Flask context, return relative path
         return '/static/images/tshirt.png'
 
+# Initialize database when app is imported (for Vercel deployment)
+# This ensures database is ready even when not running as __main__
+try:
+    init_db()
+except Exception as e:
+    print(f"Warning: Database initialization failed: {e}")
+
 if __name__ == '__main__':
     print("Starting QR App (SQLite Version)...")
     print("=" * 50)
-    try:
-        init_db()
-    except Exception as e:
-        print(f"Warning: Database initialization failed: {e}")
-    
     print("\nServer starting on http://127.0.0.1:5000")
     print("Press CTRL+C to stop the server")
     print("=" * 50)
