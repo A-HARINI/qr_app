@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Products - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-products">
+    <div class="page-header">
+        <h1>Manage Products</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+    
+    <div class="product-form-section">
+        <h2>Add New Product</h2>
+        <form method="POST" action="{{ url_for('admin_products') }}" class="product-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Product Category:</label>
+                    <select name="category" class="form-control" required>
+                        <option value="T-Shirt">T-Shirt</option>
+                        <option value="Pants">Pants</option>
+                        <option value="Shirt">Shirt</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Product Size:</label>
+                    <select name="size" class="form-control" required>
+                        <option value="32">32</option>
+                        <option value="34">34</option>
+                        <option value="36">36</option>
+                        <option value="42">42</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Product Color:</label>
+                    <select name="color" class="form-control" required>
+                        <option value="Red">🔴 Red</option>
+                        <option value="Blue">🔵 Blue</option>
+                        <option value="Green">🟢 Green</option>
+                        <option value="Black">⚫ Black</option>
+                        <option value="White">⚪ White</option>
+                        <option value="Yellow">🟡 Yellow</option>
+                        <option value="Purple">🟣 Purple</option>
+                        <option value="Pink">🌸 Pink</option>
+                        <option value="Orange">🟠 Orange</option>
+                        <option value="Gray">⚪ Gray</option>
+                        <option value="Brown">🟤 Brown</option>
+                        <option value="Navy">🔵 Navy</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Available Stock (Manual entry):</label>
+                    <input type="number" name="stock" class="form-control" min="0" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Add Product</button>
+        </form>
+    </div>
+    
+    <div class="products-list-section">
+        <h2>Existing Products</h2>
+        {% if products %}
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Size</th>
+                        <th>Color</th>
+                        <th>Stock</th>
+                        <th>QR Code</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>{{ product.id }}</td>
+                            <td>{{ product.category }}</td>
+                            <td>{{ product.size }}</td>
+                            <td><span class="color-badge" style="background-color: {{ product.color.lower() }}">{{ product.color }}</span></td>
+                            <td>{{ product.stock }}</td>
+                            <td>
+                                {% if product.qr_code %}
+                                    <code>{{ product.qr_code }}</code>
+                                {% else %}
+                                    <span style="color: #999;">Not generated</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('generate_qr_product', product_id=product.id) }}" class="btn btn-sm btn-primary">Generate QR</a>
+                                <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="{{ url_for('delete_product', product_id=product.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('⚠️ WARNING: Deleting this product will cancel all pending and confirmed orders for this product. Customers will be notified to contact support. Are you sure you want to delete?')">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No products found. Add your first product above.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+

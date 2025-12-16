@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+*.sqlite3
+*.md
+test_*.py
+*.bat
+diagnose_*.py
+update_*.py
+add_sample_products.py
+
+

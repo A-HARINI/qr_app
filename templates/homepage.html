@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Homepage - QR App{% endblock %}
+
+{% block content %}
+<div class="homepage">
+    <h1>Welcome to QR App, {{ username }}!</h1>
+    
+    <div class="categories-section">
+        <h2>Browse Products by Category</h2>
+        <div class="category-grid">
+            {% for category in categories %}
+                <a href="{{ url_for('products', category=category.category) }}" class="category-card">
+                    <h3>{{ category.category }}</h3>
+                    <p>View Products</p>
+                </a>
+            {% endfor %}
+            {% if not categories %}
+                <div class="no-products">
+                    <p>No products available. Please contact admin.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="quick-actions">
+        <a href="{{ url_for('cart') }}" class="btn btn-secondary">View Cart</a>
+        <a href="{{ url_for('orders') }}" class="btn btn-secondary">My Orders</a>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

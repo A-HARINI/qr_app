@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Orders - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-orders">
+    <div class="page-header">
+        <h1>All Orders</h1>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+    
+    {% if orders %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Size</th>
+                    <th>Color</th>
+                    <th>Quantity</th>
+                    <th>QR Code</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.username }}</td>
+                        <td>{{ order.category }}</td>
+                        <td>{{ order.size }}</td>
+                        <td><span class="color-badge" style="background-color: {{ order.color.lower() }}">{{ order.color }}</span></td>
+                        <td>{{ order.quantity }}</td>
+                        <td><code>{{ order.qr_code }}</code></td>
+                        <td>
+                            <span class="status-badge status-{{ order.status }}">
+                                {{ order.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at if order.created_at else 'N/A' }}</td>
+                        <td>
+                            <a href="{{ url_for('generate_qr', order_id=order.id) }}" class="btn btn-sm btn-primary">Generate QR</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="no-orders">
+            <div class="alert alert-info">
+                <h3>No Orders Found</h3>
+                <p>There are currently no orders in the system.</p>
+                <p><strong>Orders will appear here after customers place orders.</strong></p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

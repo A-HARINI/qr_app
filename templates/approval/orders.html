@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Pending Orders - Approval Admin{% endblock %}
+
+{% block content %}
+<div class="approval-orders">
+    <div class="page-header">
+        <h1>Pending Orders - QR Code Validation</h1>
+        <a href="{{ url_for('approval_dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+    
+    <div class="validation-info">
+        <div class="alert alert-info">
+            <h3>📋 Validation Process</h3>
+            <ol>
+                <li><strong>Review Order:</strong> Check order details and QR code</li>
+                <li><strong>Click "Validate & Approve":</strong> System will validate QR code uniqueness</li>
+                <li><strong>Validation Check:</strong> Checks if QR code is unique across all products and orders</li>
+                <li><strong>Result:</strong> 
+                    <ul>
+                        <li>✅ <strong>If Unique:</strong> Order confirmed → Customer sees "Customer confirmed your order!"</li>
+                        <li>❌ <strong>If Duplicate:</strong> Order cancelled → Customer sees "Contact support: 1234567890"</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+    
+    {% if orders %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Size</th>
+                    <th>Color</th>
+                    <th>Quantity</th>
+                    <th>QR Code</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.username }}</td>
+                        <td>{{ order.category }}</td>
+                        <td>{{ order.size }}</td>
+                        <td><span class="color-badge" style="background-color: {{ order.color.lower() }}">{{ order.color }}</span></td>
+                        <td>{{ order.quantity }}</td>
+                        <td><code>{{ order.qr_code }}</code></td>
+                        <td>
+                            <span class="status-badge status-{{ order.status }}">
+                                {{ order.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at if order.created_at else 'N/A' }}</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
+                                <form method="POST" action="{{ url_for('approve_order', order_id=order.id) }}" style="display: inline-block;" onsubmit="return confirmValidation({{ order.id }}, '{{ order.qr_code }}');">
+                                    <input type="hidden" name="order_id" value="{{ order.id }}">
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        ✓ Validate & Approve
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('cancel_order', order_id=order.id) }}" style="display: inline-block;" onsubmit="return confirmCancel({{ order.id }});">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        ✗ Cancel Order
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="no-orders">
+            <div class="alert alert-warning">
+                <h3>No Pending Orders</h3>
+                <p>There are currently no pending orders waiting for QR code validation.</p>
+                <p><strong>Note:</strong> Orders will appear here after customers complete checkout.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function confirmValidation(orderId, qrCode) {
+    const message = `Validate and Approve Order #${orderId}?\n\n` +
+                    `QR Code: ${qrCode}\n\n` +
+                    `The system will:\n` +
+                    `1. Confirm the order\n` +
+                    `2. Check if QR code is unique across all products and orders\n` +
+                    `3. If unique: Order confirmed ✅\n` +
+                    `4. If duplicate: Order cancelled ❌\n\n` +
+                    `Continue?`;
+    
+    return confirm(message);
+}
+
+function confirmCancel(orderId) {
+    const message = `Cancel Order #${orderId}?\n\n` +
+                    `⚠️ WARNING: This will cancel the order.\n` +
+                    `Customer will see a message to contact support: 1234567890\n\n` +
+                    `Are you sure you want to cancel this order?`;
+    
+    return confirm(message);
+}
+
+// Log when page loads
+console.log('=== APPROVAL ORDERS PAGE LOADED ===');
+console.log('Pending orders count:', {{ orders|length }});
+
+// Monitor form submissions
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, setting up form listeners...');
+    
+    const forms = document.querySelectorAll('form[action*="approve_order"]');
+    console.log('Found', forms.length, 'approve forms');
+    
+    forms.forEach(function(form, index) {
+        const orderId = form.action.match(/approve_order\/(\d+)/);
+        console.log(`Form ${index + 1}: Order ID = ${orderId ? orderId[1] : 'unknown'}, Action = ${form.action}`);
+        
+        form.addEventListener('submit', function(e) {
+            console.log('=== VALIDATION STARTING ===');
+            console.log('Order ID:', orderId ? orderId[1] : 'unknown');
+            console.log('Form action:', form.action);
+        });
+    });
+});
+</script>
+
+{% endblock %}
+
+

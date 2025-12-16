@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Product - Admin{% endblock %}
+
+{% block content %}
+<div class="edit-product">
+    <div class="page-header">
+        <h1>Edit Product</h1>
+        <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">← Back to Products</a>
+    </div>
+    
+    <form method="POST" action="{{ url_for('edit_product', product_id=product.id) }}" class="product-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Product Category:</label>
+                <select name="category" class="form-control" required>
+                    <option value="T-Shirt" {% if product.category == 'T-Shirt' %}selected{% endif %}>T-Shirt</option>
+                    <option value="Pants" {% if product.category == 'Pants' %}selected{% endif %}>Pants</option>
+                    <option value="Shirt" {% if product.category == 'Shirt' %}selected{% endif %}>Shirt</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Product Size:</label>
+                <select name="size" class="form-control" required>
+                    <option value="32" {% if product.size == '32' %}selected{% endif %}>32</option>
+                    <option value="34" {% if product.size == '34' %}selected{% endif %}>34</option>
+                    <option value="36" {% if product.size == '36' %}selected{% endif %}>36</option>
+                    <option value="42" {% if product.size == '42' %}selected{% endif %}>42</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Product Color:</label>
+                <select name="color" class="form-control" required>
+                    <option value="Red" {% if product.color == 'Red' %}selected{% endif %}>Red</option>
+                    <option value="Purple" {% if product.color == 'Purple' %}selected{% endif %}>Purple</option>
+                    <option value="Yellow" {% if product.color == 'Yellow' %}selected{% endif %}>Yellow</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Available Stock:</label>
+                <input type="number" name="stock" class="form-control" value="{{ product.stock }}" min="0" required>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Update Product</button>
+    </form>
+</div>
+{% endblock %}
+
+
+
+

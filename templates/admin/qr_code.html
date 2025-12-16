@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}QR Code - Admin{% endblock %}
+
+{% block content %}
+<div class="qr-code-page">
+    <div class="page-header">
+        <h1>QR Code Generated</h1>
+        {% if is_product %}
+            <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">← Back to Products</a>
+        {% else %}
+            <a href="{{ url_for('admin_orders') }}" class="btn btn-secondary">← Back to Orders</a>
+        {% endif %}
+    </div>
+    
+    <div class="qr-code-container">
+        <div class="qr-code-info">
+            {% if is_product and product_info %}
+                <h2>Product: {{ product_info }}</h2>
+            {% endif %}
+            <h2>QR Code: <code>{{ qr_code }}</code></h2>
+            <div class="qr-image">
+                <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code">
+            </div>
+            {% if is_product %}
+                <p>This unique QR code has been generated for this product. Each product has its own unique QR code.</p>
+            {% else %}
+                <p>This QR code has been generated for the order. It will be validated by the Approval Admin.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
