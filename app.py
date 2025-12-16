@@ -883,17 +883,29 @@ def get_product_image_url(category, color):
 # Database will be initialized on first request or when running locally
 # This prevents import-time errors in serverless environments
 _db_init_attempted = False
+_db_init_success = False
 
 def ensure_db_initialized():
     """Ensure database is initialized (lazy initialization)"""
-    global _db_init_attempted
+    global _db_init_attempted, _db_init_success
+    
+    # If already successfully initialized, skip
+    if _db_init_success:
+        return
+    
     if not _db_init_attempted:
+        _db_init_attempted = True
         try:
+            print("Initializing database...")
             init_db()
-            _db_init_attempted = True
+            _db_init_success = True
+            print("✓ Database initialized successfully")
         except Exception as e:
-            print(f"Warning: Database initialization failed: {e}")
-            _db_init_attempted = True  # Mark as attempted to avoid retry loops
+            print(f"⚠ Warning: Database initialization failed: {e}")
+            import traceback
+            traceback.print_exc()
+            # Don't mark as success, but don't retry immediately to avoid loops
+            # Will retry on next request if needed
 
 # Initialize database when running locally
 if __name__ == '__main__':
