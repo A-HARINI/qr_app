@@ -1,6 +1,6 @@
 """
 Vercel serverless function entry point for Flask app
-Using Flask's wsgi_app directly to avoid Vercel's issubclass() inspection issue
+Final fix: Create proper WSGI application class
 """
 import sys
 import os
@@ -31,6 +31,22 @@ def handle_exceptions(e):
     from flask import jsonify
     return jsonify({'error': 'Internal server error'}), 500
 
-# Export Flask's wsgi_app directly - this is the actual WSGI callable
-# This avoids Vercel's issubclass() inspection of the Flask app class
-handler = app.wsgi_app
+# Create a proper WSGI application class
+# This class has a clean inheritance hierarchy that Vercel can inspect
+class WSGIApplication:
+    """WSGI application wrapper with clean class hierarchy"""
+    __bases__ = (object,)  # Explicitly set bases to ensure clean MRO
+    
+    def __init__(self, flask_app):
+        self.flask_app = flask_app
+    
+    def __call__(self, environ, start_response):
+        """WSGI interface"""
+        return self.flask_app(environ, start_response)
+    
+    def __getattr__(self, name):
+        """Delegate to Flask app"""
+        return getattr(self.flask_app, name)
+
+# Export handler as WSGI application class instance
+handler = WSGIApplication(app)
