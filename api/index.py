@@ -102,7 +102,6 @@ try:
         # Continue anyway - at least we have the handler exported
     
     print("✓ Handler exported successfully")
-    print("✓ Global exception handler registered")
     print("=== INITIALIZATION COMPLETE ===")
     
 except ImportError as e:
@@ -205,40 +204,8 @@ if not callable(handler):
 
 print(f"✓ Final handler type: {type(handler)}, callable: {callable(handler)}")
 
-# Wrap handler in a safety wrapper to catch any invocation errors
-# This is the last line of defense against FUNCTION_INVOCATION_FAILED
-_original_handler = handler
-def safe_handler(environ, start_response):
-    """Wrapper that catches any errors during handler invocation"""
-    try:
-        return _original_handler(environ, start_response)
-    except Exception as e:
-        import traceback
-        error_trace = traceback.format_exc()
-        error_msg = str(e)
-        print(f"❌ CRITICAL: Handler invocation failed: {error_msg}")
-        print(error_trace)
-        
-        # Return a minimal WSGI response
-        try:
-            status = '500 Internal Server Error'
-            headers = [('Content-type', 'text/plain')]
-            body = f"Internal Server Error: {error_msg}"
-            start_response(status, headers)
-            return [body.encode()]
-        except Exception as final_error:
-            # Even start_response failed - try one more time with minimal setup
-            print(f"❌ CRITICAL: Even error response failed: {final_error}")
-            try:
-                # Last resort: try start_response one more time
-                start_response('500 Internal Server Error', [('Content-type', 'text/plain')])
-                return [b'500 Internal Server Error']
-            except:
-                # Absolute last resort: return bytes (violates WSGI but prevents crash)
-                # In serverless, this is better than crashing
-                return [b'500 Internal Server Error']
-
-# Always wrap the handler to add final safety layer
-# This ensures NO exception can crash the function
-handler = safe_handler
-print("✓ Handler wrapped with safety wrapper (final defense)")
+# NOTE: We do NOT wrap the handler in a function because Vercel's handler
+# performs type checking using issubclass() which fails on function wrappers.
+# Instead, we rely on Flask's built-in error handling (@app.errorhandler(Exception))
+# which is registered above and will catch all exceptions in route handlers.
+# The Flask app itself is a proper WSGI application that Vercel can inspect correctly.
