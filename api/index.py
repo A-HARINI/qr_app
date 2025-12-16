@@ -1,6 +1,6 @@
 """
 Vercel serverless function entry point for Flask app
-Direct Flask app export - simplest possible approach
+Minimal handler that Vercel can inspect correctly
 """
 import sys
 import os
@@ -31,8 +31,14 @@ def handle_exceptions(e):
     from flask import jsonify
     return jsonify({'error': 'Internal server error'}), 500
 
-# CRITICAL FIX: Export Flask app's __call__ method directly
-# This creates a bound method that Vercel should handle correctly
-# The bound method's class is types.MethodType, not Flask, so issubclass() won't fail
-import types
-handler = types.MethodType(app.__call__, app)
+# Create minimal handler class that only inherits from object
+# This ensures clean MRO that Vercel can inspect
+class Handler:
+    def __init__(self, app):
+        self._app = app
+    
+    def __call__(self, environ, start_response):
+        return self._app(environ, start_response)
+
+# Export handler
+handler = Handler(app)
