@@ -1,18 +1,12 @@
 """
-Vercel serverless function entry point for Flask app
-Minimal handler that Vercel can inspect correctly
+Vercel serverless function - Flask app entry point
+Official Vercel Flask pattern
 """
 import sys
 import os
 
 # Add parent directory to path
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
-
-# Set Vercel environment
-os.environ.setdefault('VERCEL_ENV', '1')
-os.environ.setdefault('VERCEL', '1')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import Flask app
 from app import app, ensure_db_initialized
@@ -31,14 +25,6 @@ def handle_exceptions(e):
     from flask import jsonify
     return jsonify({'error': 'Internal server error'}), 500
 
-# Create minimal handler class that only inherits from object
-# This ensures clean MRO that Vercel can inspect
-class Handler:
-    def __init__(self, app):
-        self._app = app
-    
-    def __call__(self, environ, start_response):
-        return self._app(environ, start_response)
-
-# Export handler
-handler = Handler(app)
+# Export Flask app directly - Vercel's official pattern
+# Vercel auto-detects Flask apps and handles them correctly
+handler = app
