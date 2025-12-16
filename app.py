@@ -27,16 +27,23 @@ else:
 def get_db():
     """Get database connection with error handling to prevent function crashes"""
     try:
+        # Ensure database directory exists
+        db_dir = os.path.dirname(os.path.abspath(DATABASE))
+        if db_dir and not os.path.exists(db_dir):
+            os.makedirs(db_dir, exist_ok=True)
+        
         # Add timeout to prevent hanging on locked database
         conn = sqlite3.connect(DATABASE, timeout=10.0)
         conn.row_factory = sqlite3.Row  # This makes rows behave like dicts
         return conn
     except sqlite3.Error as e:
         print(f"❌ Database connection error: {e}")
+        print(f"Database path: {DATABASE}")
         # Re-raise to be caught by route handlers
         raise
     except Exception as e:
         print(f"❌ Unexpected error connecting to database: {e}")
+        print(f"Database path: {DATABASE}")
         raise
 
 # Helper function to execute queries and return dict-like results
