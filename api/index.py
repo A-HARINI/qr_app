@@ -54,31 +54,52 @@ try:
     
     # CRITICAL: Add global exception handler to prevent FUNCTION_INVOCATION_FAILED
     # This catches ALL unhandled exceptions that would otherwise crash the function
-    @app.errorhandler(Exception)
-    def handle_all_exceptions(e):
-        """Catch all unhandled exceptions to prevent function crashes"""
-        import traceback
-        error_trace = traceback.format_exc()
-        error_msg = str(e)
-        print(f"❌ Unhandled exception in request: {error_msg}")
-        print(error_trace)
-        
-        # Return a proper HTTP response instead of crashing
-        from flask import jsonify
-        try:
-            # Try to return JSON response
-            return jsonify({
-                'error': 'Internal server error',
-                'message': error_msg if app.debug else 'An error occurred. Please try again later.'
-            }), 500
-        except Exception:
-            # If even JSON response fails, return plain text
-            from flask import Response
-            return Response(
-                f"Internal Server Error: {error_msg}",
-                status=500,
-                mimetype='text/plain'
-            )
+    try:
+        @app.errorhandler(Exception)
+        def handle_all_exceptions(e):
+            """Catch all unhandled exceptions to prevent function crashes"""
+            import traceback
+            error_trace = traceback.format_exc()
+            error_msg = str(e)
+            print(f"❌ Unhandled exception in request: {error_msg}")
+            print(error_trace)
+            
+            # Return a proper HTTP response instead of crashing
+            try:
+                from flask import jsonify, Response
+                # Safely check debug mode
+                try:
+                    is_debug = app.debug
+                except:
+                    is_debug = False
+                
+                # Try to return JSON response
+                try:
+                    return jsonify({
+                        'error': 'Internal server error',
+                        'message': error_msg if is_debug else 'An error occurred. Please try again later.'
+                    }), 500
+                except Exception:
+                    # If JSON fails, return plain text Response
+                    return Response(
+                        f"Internal Server Error: {error_msg}",
+                        status=500,
+                        mimetype='text/plain'
+                    )
+            except Exception as handler_error:
+                # Last resort: return minimal WSGI response
+                print(f"❌ Exception handler itself failed: {handler_error}")
+                from flask import Response
+                return Response(
+                    "Internal Server Error",
+                    status=500,
+                    mimetype='text/plain'
+                )
+        print("✓ Global exception handler registered")
+    except Exception as handler_reg_error:
+        print(f"⚠ Warning: Failed to register exception handler: {handler_reg_error}")
+        traceback.print_exc()
+        # Continue anyway - at least we have the handler exported
     
     print("✓ Handler exported successfully")
     print("✓ Global exception handler registered")
@@ -183,3 +204,41 @@ if not callable(handler):
     handler = final_fallback
 
 print(f"✓ Final handler type: {type(handler)}, callable: {callable(handler)}")
+
+# Wrap handler in a safety wrapper to catch any invocation errors
+# This is the last line of defense against FUNCTION_INVOCATION_FAILED
+_original_handler = handler
+def safe_handler(environ, start_response):
+    """Wrapper that catches any errors during handler invocation"""
+    try:
+        return _original_handler(environ, start_response)
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        error_msg = str(e)
+        print(f"❌ CRITICAL: Handler invocation failed: {error_msg}")
+        print(error_trace)
+        
+        # Return a minimal WSGI response
+        try:
+            status = '500 Internal Server Error'
+            headers = [('Content-type', 'text/plain')]
+            body = f"Internal Server Error: {error_msg}"
+            start_response(status, headers)
+            return [body.encode()]
+        except Exception as final_error:
+            # Even start_response failed - try one more time with minimal setup
+            print(f"❌ CRITICAL: Even error response failed: {final_error}")
+            try:
+                # Last resort: try start_response one more time
+                start_response('500 Internal Server Error', [('Content-type', 'text/plain')])
+                return [b'500 Internal Server Error']
+            except:
+                # Absolute last resort: return bytes (violates WSGI but prevents crash)
+                # In serverless, this is better than crashing
+                return [b'500 Internal Server Error']
+
+# Always wrap the handler to add final safety layer
+# This ensures NO exception can crash the function
+handler = safe_handler
+print("✓ Handler wrapped with safety wrapper (final defense)")
