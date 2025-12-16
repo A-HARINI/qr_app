@@ -22,19 +22,45 @@ else:
 
 # Helper function to get database connection
 def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row  # This makes rows behave like dicts
-    return conn
+    """Get database connection with error handling to prevent function crashes"""
+    try:
+        # Add timeout to prevent hanging on locked database
+        conn = sqlite3.connect(DATABASE, timeout=10.0)
+        conn.row_factory = sqlite3.Row  # This makes rows behave like dicts
+        return conn
+    except sqlite3.Error as e:
+        print(f"❌ Database connection error: {e}")
+        # Re-raise to be caught by route handlers
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected error connecting to database: {e}")
+        raise
 
 # Helper function to execute queries and return dict-like results
 def query_db(query, args=(), one=False):
-    conn = get_db()
-    cur = conn.execute(query, args)
-    rv = cur.fetchall()
-    conn.commit()
-    cur.close()
-    conn.close()
-    return (rv[0] if rv else None) if one else rv
+    """Execute database query with error handling"""
+    conn = None
+    try:
+        conn = get_db()
+        cur = conn.execute(query, args)
+        rv = cur.fetchall()
+        conn.commit()
+        cur.close()
+        return (rv[0] if rv else None) if one else rv
+    except sqlite3.Error as e:
+        print(f"❌ Database query error: {e}")
+        print(f"Query: {query[:100]}...")  # Log first 100 chars of query
+        if conn:
+            conn.rollback()
+        raise  # Re-raise to be caught by route handlers
+    except Exception as e:
+        print(f"❌ Unexpected error in query_db: {e}")
+        if conn:
+            conn.rollback()
+        raise
+    finally:
+        if conn:
+            conn.close()
 
 # Initialize database tables
 def init_db():

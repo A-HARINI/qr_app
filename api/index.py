@@ -51,7 +51,37 @@ try:
     # Vercel's @vercel/python builder expects a WSGI application
     # The Flask app IS a WSGI application, so we can export it directly
     handler = app
+    
+    # CRITICAL: Add global exception handler to prevent FUNCTION_INVOCATION_FAILED
+    # This catches ALL unhandled exceptions that would otherwise crash the function
+    @app.errorhandler(Exception)
+    def handle_all_exceptions(e):
+        """Catch all unhandled exceptions to prevent function crashes"""
+        import traceback
+        error_trace = traceback.format_exc()
+        error_msg = str(e)
+        print(f"❌ Unhandled exception in request: {error_msg}")
+        print(error_trace)
+        
+        # Return a proper HTTP response instead of crashing
+        from flask import jsonify
+        try:
+            # Try to return JSON response
+            return jsonify({
+                'error': 'Internal server error',
+                'message': error_msg if app.debug else 'An error occurred. Please try again later.'
+            }), 500
+        except Exception:
+            # If even JSON response fails, return plain text
+            from flask import Response
+            return Response(
+                f"Internal Server Error: {error_msg}",
+                status=500,
+                mimetype='text/plain'
+            )
+    
     print("✓ Handler exported successfully")
+    print("✓ Global exception handler registered")
     print("=== INITIALIZATION COMPLETE ===")
     
 except ImportError as e:
