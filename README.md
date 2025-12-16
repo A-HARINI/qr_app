@@ -15,7 +15,8 @@ A Flask-based QR code management system for products and orders.
 - Flask 3.0.0
 - SQLite Database
 - QR Code Generation
-- Bootstrap UI
+- Jinja2 Templates (Frontend)
+- Custom CSS 
 
 ## Setup
 

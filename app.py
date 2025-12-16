@@ -880,16 +880,29 @@ def get_product_image_url(category, color):
         # If outside Flask context, return relative path
         return '/static/images/tshirt.png'
 
-# Initialize database when app is imported (for Vercel deployment)
-# This ensures database is ready even when not running as __main__
-try:
-    init_db()
-except Exception as e:
-    print(f"Warning: Database initialization failed: {e}")
+# Database will be initialized on first request or when running locally
+# This prevents import-time errors in serverless environments
+_db_init_attempted = False
 
+def ensure_db_initialized():
+    """Ensure database is initialized (lazy initialization)"""
+    global _db_init_attempted
+    if not _db_init_attempted:
+        try:
+            init_db()
+            _db_init_attempted = True
+        except Exception as e:
+            print(f"Warning: Database initialization failed: {e}")
+            _db_init_attempted = True  # Mark as attempted to avoid retry loops
+
+# Initialize database when running locally
 if __name__ == '__main__':
     print("Starting QR App (SQLite Version)...")
     print("=" * 50)
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Warning: Database initialization failed: {e}")
     print("\nServer starting on http://127.0.0.1:5000")
     print("Press CTRL+C to stop the server")
     print("=" * 50)
