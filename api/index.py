@@ -16,13 +16,13 @@ if not os.environ.get('VERCEL_ENV'):
 if not os.environ.get('VERCEL'):
     os.environ['VERCEL'] = '1'
 
-# Initialize handler variable to None (will be set below)
-handler = None
+# Import Flask app directly - this is what Vercel expects
+# Vercel's handler inspects the handler using issubclass(), so it must be a class instance
+# Flask app is a WSGI application instance, which Vercel can inspect correctly
+print("=== VERCEL FUNCTION INITIALIZATION ===")
+print("Importing Flask app...")
 
 try:
-    # Import app - this should not fail
-    print("=== VERCEL FUNCTION INITIALIZATION ===")
-    print("Importing Flask app...")
     from app import app, ensure_db_initialized
     print("✓ Flask app imported successfully")
     
@@ -48,9 +48,11 @@ try:
         # Will initialize on first request via before_request hook
     
     # Export the Flask app for Vercel
-    # Vercel's @vercel/python builder expects a WSGI application
-    # The Flask app IS a WSGI application, so we can export it directly
+    # CRITICAL: Export app directly - Vercel inspects handler using issubclass()
+    # Flask app is a WSGI application instance that Vercel can inspect correctly
+    # Do NOT wrap it in a function or it will fail issubclass() check
     handler = app
+    print(f"✓ Handler type: {type(handler).__name__}, module: {type(handler).__module__}")
     
     # CRITICAL: Add global exception handler to prevent FUNCTION_INVOCATION_FAILED
     # This catches ALL unhandled exceptions that would otherwise crash the function
@@ -111,7 +113,7 @@ except ImportError as e:
     print(f"❌ CRITICAL IMPORT ERROR: {error_msg}")
     print(error_trace)
     
-    # Create minimal error handler
+    # Create Flask app for error handling (must be Flask instance, not function)
     try:
         from flask import Flask, Response
         error_app = Flask(__name__)
@@ -129,19 +131,19 @@ except ImportError as e:
                 mimetype='text/html'
             )
         
-        handler = error_app
+        handler = error_app  # Flask instance - passes issubclass() check
         print("✓ Error handler created (Import Error)")
     except Exception as fallback_error:
-        print(f"❌ Failed to create error handler: {fallback_error}")
+        print(f"❌ Failed to create Flask error handler: {fallback_error}")
         traceback.print_exc()
-        # Last resort - create a simple WSGI handler
-        def fallback_handler(environ, start_response):
-            status = '500 Internal Server Error'
-            headers = [('Content-type', 'text/html')]
-            body = f"<h1>500 Error</h1><p>{error_msg}</p><pre>{error_trace}</pre>"
-            start_response(status, headers)
-            return [body.encode()]
-        handler = fallback_handler
+        # If we can't create Flask app, we MUST still export a Flask instance
+        # Create minimal Flask app
+        from flask import Flask
+        handler = Flask(__name__)
+        @handler.route('/<path:path>')
+        @handler.route('/')
+        def error_route(path=''):
+            return f"<h1>500 Error</h1><p>{error_msg}</p>", 500
 
 except Exception as e:
     # Any other error during initialization
@@ -150,7 +152,7 @@ except Exception as e:
     print(f"❌ CRITICAL UNEXPECTED ERROR: {error_msg}")
     print(error_trace)
     
-    # Try to create error handler
+    # Try to create Flask error handler (must be Flask instance, not function)
     try:
         from flask import Flask, Response
         error_app = Flask(__name__)
@@ -167,42 +169,62 @@ except Exception as e:
                 mimetype='text/html'
             )
         
-        handler = error_app
+        handler = error_app  # Flask instance - passes issubclass() check
         print("✓ Error handler created (Unexpected Error)")
     except Exception as fallback_error:
-        print(f"❌ Failed to create error handler: {fallback_error}")
+        print(f"❌ Failed to create Flask error handler: {fallback_error}")
         traceback.print_exc()
-        def fallback_handler(environ, start_response):
-            status = '500 Internal Server Error'
-            headers = [('Content-type', 'text/html')]
-            body = f"<h1>500 Error</h1><p>{error_msg}</p><pre>{error_trace}</pre>"
-            start_response(status, headers)
-            return [body.encode()]
-        handler = fallback_handler
+        # Last resort: create minimal Flask app (must be Flask instance)
+        from flask import Flask
+        handler = Flask(__name__)
+        @handler.route('/<path:path>')
+        @handler.route('/')
+        def error_route(path=''):
+            return f"<h1>500 Error</h1><p>{error_msg}</p>", 500
 
 # Ensure handler is always defined (safety check)
+# CRITICAL: Handler MUST be a Flask instance, not a function, for Vercel's issubclass() check
 if handler is None:
-    print("❌ WARNING: Handler is None! Creating fallback handler.")
-    def fallback_handler(environ, start_response):
-        status = '500 Internal Server Error'
-        headers = [('Content-type', 'text/html')]
-        body = "<h1>500 Error</h1><p>Handler not properly initialized. Check Vercel logs.</p>"
-        start_response(status, headers)
-        return [body.encode()]
-    handler = fallback_handler
+    print("❌ WARNING: Handler is None! Creating Flask fallback handler.")
+    from flask import Flask
+    handler = Flask(__name__)
+    @handler.route('/<path:path>')
+    @handler.route('/')
+    def fallback_route(path=''):
+        return "<h1>500 Error</h1><p>Handler not properly initialized. Check Vercel logs.</p>", 500
 
-# Final verification - handler must be callable
+# Final verification - handler must be callable and a Flask instance
 if not callable(handler):
     print(f"❌ CRITICAL: Handler is not callable! Type: {type(handler)}")
-    def final_fallback(environ, start_response):
-        status = '500 Internal Server Error'
-        headers = [('Content-type', 'text/html')]
-        body = f"<h1>500 Error</h1><p>Handler initialization failed. Type: {type(handler)}</p>"
-        start_response(status, headers)
-        return [body.encode()]
-    handler = final_fallback
+    from flask import Flask
+    handler = Flask(__name__)
+    @handler.route('/<path:path>')
+    @handler.route('/')
+    def final_fallback_route(path=''):
+        return f"<h1>500 Error</h1><p>Handler initialization failed. Type: {type(handler)}</p>", 500
 
-print(f"✓ Final handler type: {type(handler)}, callable: {callable(handler)}")
+# Verify handler is a Flask instance (not a function)
+# This is critical - Vercel uses issubclass() which requires a class instance
+try:
+    from flask import Flask
+    if not isinstance(handler, Flask):
+        print(f"⚠ WARNING: Handler is not a Flask instance! Type: {type(handler)}")
+        print(f"⚠ This may cause issubclass() errors in Vercel's handler")
+        # Try to fix it
+        try:
+            handler = Flask(__name__)
+            @handler.route('/<path:path>')
+            @handler.route('/')
+            def warning_route(path=''):
+                return "<h1>500 Error</h1><p>Handler type error. Check logs.</p>", 500
+            print("✓ Created Flask instance as fallback")
+        except Exception as fix_error:
+            print(f"❌ Could not create Flask fallback: {fix_error}")
+except Exception as check_error:
+    print(f"⚠ Could not verify handler type: {check_error}")
+
+print(f"✓ Final handler type: {type(handler).__name__}, callable: {callable(handler)}")
+print(f"✓ Handler is Flask instance: {isinstance(handler, Flask) if 'Flask' in dir() else 'unknown'}")
 
 # NOTE: We do NOT wrap the handler in a function because Vercel's handler
 # performs type checking using issubclass() which fails on function wrappers.
