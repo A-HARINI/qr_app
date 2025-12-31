@@ -363,7 +363,8 @@ def products():
         if total_available_count > 0:
             product['stock'] = available_stock  # Validated stock for purchasing
             product['total_available'] = total_available_count  # Total items for display
-            product['needs_validation'] = (total_available_count > available_stock)  # Has unvalidated items
+            # Items are validated when created by admin, so no validation needed
+            product['needs_validation'] = False
             filtered_products.append(product)
     
     # Ensure all products have image URLs based on category
@@ -682,9 +683,9 @@ def admin_products():
             for i in range(stock):
                 try:
                     item_qr_code = generate_unique_item_qr_code(cursor)
-                    # Items start as unvalidated - only validated when scanned via mobile
+                    # Items are validated when created by admin - ready for customer orders
                     cursor.execute(
-                        'INSERT INTO items (product_id, qr_code, status, validated) VALUES (?, ?, ?, 0)',
+                        'INSERT INTO items (product_id, qr_code, status, validated, validated_at) VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)',
                         (product_id, item_qr_code, 'available')
                     )
                     items_created += 1
@@ -749,8 +750,9 @@ def admin_products():
             for i in range(stock):
                 try:
                     item_qr_code = generate_unique_item_qr_code(cursor)
+                    # Items are validated when created by admin - ready for customer orders
                     cursor.execute(
-                        'INSERT INTO items (product_id, qr_code, status, validated) VALUES (?, ?, ?, 0)',
+                        'INSERT INTO items (product_id, qr_code, status, validated, validated_at) VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)',
                         (product_id, item_qr_code, 'available')
                     )
                     items_created += 1

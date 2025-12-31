@@ -40,11 +40,6 @@
                         <p><strong>Size:</strong> {{ product.size }}</p>
                         <p><strong>Color:</strong> <span class="color-badge" style="background-color: {{ product.color.lower() }}">{{ product.color }}</span></p>
                         <p><strong>Stock:</strong> {{ product.stock }} available</p>
-                        {% if product.needs_validation %}
-                            <p class="text-warning" style="font-size: 0.85em; margin-top: 5px;">
-                                ⚠ Some items pending validation
-                            </p>
-                        {% endif %}
                     </div>
                     
                     <div class="product-actions">
