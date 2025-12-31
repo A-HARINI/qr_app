@@ -19,7 +19,7 @@
                     <th>Size</th>
                     <th>Color</th>
                     <th>Quantity</th>
-                    <th>QR Code</th>
+                    <th>Item QR Codes</th>
                     <th>Status</th>
                     <th>Date</th>
                     <th>Actions</th>
@@ -34,7 +34,26 @@
                         <td>{{ order.size }}</td>
                         <td><span class="color-badge" style="background-color: {{ order.color.lower() }}">{{ order.color }}</span></td>
                         <td>{{ order.quantity }}</td>
-                        <td><code>{{ order.qr_code }}</code></td>
+                        <td>
+                            {% if order['items'] %}
+                            <div>
+                                <small><strong>Item QR Codes ({{ order['items']|length }}):</strong></small>
+                                {% for item in order['items'] %}
+                                <div class="mt-1">
+                                    <code class="small">{{ item.qr_code }}</code>
+                                    {% if item.validated %}
+                                        <span class="badge bg-success badge-sm">✓ Validated</span>
+                                    {% else %}
+                                        <span class="badge bg-warning badge-sm">⚠ Not Validated</span>
+                                    {% endif %}
+                                    <span class="badge bg-info badge-sm">{{ item.item_status }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="text-muted">No items assigned</span>
+                            {% endif %}
+                        </td>
                         <td>
                             <span class="status-badge status-{{ order.status }}">
                                 {{ order.status|title }}
@@ -42,7 +61,7 @@
                         </td>
                         <td>{{ order.created_at if order.created_at else 'N/A' }}</td>
                         <td>
-                            <a href="{{ url_for('generate_qr', order_id=order.id) }}" class="btn btn-sm btn-primary">Generate QR</a>
+                            <span class="text-muted">-</span>
                         </td>
                     </tr>
                 {% endfor %}

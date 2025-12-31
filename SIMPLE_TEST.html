@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server Test</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 40px;
+            text-align: center;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px;
+            font-size: 18px;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flask Server Connection Test</h1>
+        
+        <div class="status" id="status">
+            <p>Click the button below to test if your Flask server is running...</p>
+        </div>
+        
+        <a href="http://127.0.0.1:5000" class="test-link" target="_blank">
+            Test Server Connection
+        </a>
+        
+        <a href="http://localhost:5000" class="test-link" target="_blank">
+            Test with localhost
+        </a>
+        
+        <div style="margin-top: 30px; text-align: left;">
+            <h3>Instructions:</h3>
+            <ol>
+                <li><strong>First:</strong> Make sure server is running
+                    <ul>
+                        <li>Double-click <code>START_SERVER.bat</code></li>
+                        <li>OR run: <code>python app.py</code></li>
+                        <li>Wait for: <code>Running on http://0.0.0.0:5000</code></li>
+                    </ul>
+                </li>
+                <li><strong>Then:</strong> Click the test buttons above</li>
+                <li>If you see the login page → Server is working!</li>
+                <li>If you see "Cannot reach" → Server is not running</li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-radius: 5px;">
+            <h3>Still Not Working?</h3>
+            <p>1. Check server window - is it showing "Running on..."?</p>
+            <p>2. Make sure you're using <code>http://</code> not <code>https://</code></p>
+            <p>3. Try a different browser (Firefox or Edge)</p>
+            <p>4. Check Windows Firewall - allow Python on port 5000</p>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,54 @@
+================================================================================
+                    HOW TO RUN - USE EXISTING FILES
+================================================================================
+
+METHOD 1 (RECOMMENDED):
+-----------------------
+Double-click: START_HERE_FOR_OUTPUT.bat
+
+Then:
+1. Keep window OPEN
+2. Wait for: "* Running on http://0.0.0.0:5000"
+3. Open browser: http://127.0.0.1:5000
+
+
+METHOD 2:
+---------
+Double-click: SIMPLE_START.bat
+
+Same steps as above.
+
+
+METHOD 3 (MANUAL):
+------------------
+1. Open Command Prompt (Press Win+R, type "cmd", press Enter)
+2. Type these commands:
+   cd E:\QR_APP
+   python app.py
+3. Open browser: http://127.0.0.1:5000
+
+
+================================================================================
+IMPORTANT FILES THAT ALREADY EXIST:
+================================================================================
+
+- START_HERE_FOR_OUTPUT.bat  ← Use this one!
+- SIMPLE_START.bat
+- QUICK_START.bat
+- START_SERVER.bat
+- START_APP.bat
+
+
+================================================================================
+IF PYTHON IS NOT INSTALLED:
+================================================================================
+
+1. Download Python from: https://www.python.org/downloads/
+2. During installation, check "Add Python to PATH"
+3. Restart your computer
+4. Then try running again
+
+
+================================================================================
+
+

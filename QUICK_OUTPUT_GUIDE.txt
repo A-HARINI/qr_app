@@ -1,0 +1,90 @@
+================================================================================
+                    HOW TO SEE SERVER OUTPUT - QUICK GUIDE
+================================================================================
+
+METHOD 1: CONSOLE OUTPUT (Easiest - See everything in one window)
+------------------------------------------------------------------------
+1. Double-click: START_HERE_FOR_OUTPUT.bat
+2. A window will open showing ALL server output
+3. Keep this window open while using the app
+4. You'll see messages like:
+   - [OK] Port 5000 is available
+   - [SUCCESS] Server will be accessible at...
+   - * Running on http://0.0.0.0:5000
+
+METHOD 2: WEB STATUS DASHBOARD (Visual output screen)
+------------------------------------------------------------------------
+1. Start server: Double-click START_HERE_FOR_OUTPUT.bat
+2. Wait 3 seconds for server to start
+3. Open browser: http://127.0.0.1:5000/status
+4. You'll see a beautiful status dashboard showing:
+   - Server status (Online/Offline)
+   - Connection tests
+   - Database status
+   - System information
+   - Real-time console output
+
+METHOD 3: TEST OUTPUT (See what output looks like)
+------------------------------------------------------------------------
+1. Double-click: TEST_OUTPUT.bat
+2. This shows you what the output should look like
+3. (This doesn't start the server, just shows example output)
+
+================================================================================
+WHAT OUTPUT YOU SHOULD SEE WHEN SERVER STARTS:
+================================================================================
+
+Starting QR App (SQLite Version)...
+==================================================
+
+[INFO] Initializing database...
+[OK] Database ready
+
+==================================================
+STARTING FLASK SERVER
+==================================================
+[OK] Port 5000 is available
+
+[SUCCESS] Server will be accessible at:
+  Local:    http://127.0.0.1:5000
+  Network:  http://192.168.x.x:5000
+
+[STATUS DASHBOARD]
+  View output screen: http://127.0.0.1:5000/status
+
+ * Running on http://0.0.0.0:5000
+ * Debug mode: on
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+Problem: No output appears
+Solution: 
+  - Make sure Python is installed
+  - Check if window stays open (if it closes, there's an error)
+  - Look for red error messages
+
+Problem: Window closes immediately
+Solution:
+  - There's an error - read the error message before window closes
+  - Install dependencies: pip install flask qrcode pillow
+
+Problem: Can't see status page
+Solution:
+  - Make sure server is running first (see Method 1)
+  - Wait 3-5 seconds after starting server
+  - Try: http://127.0.0.1:5000/status
+
+================================================================================
+FILES TO USE:
+================================================================================
+
+START_HERE_FOR_OUTPUT.bat  - Start server and see console output (BEST)
+TEST_OUTPUT.bat            - See example output (doesn't start server)
+OPEN_STATUS.bat            - Open status dashboard (after server starts)
+
+================================================================================
+
+
+

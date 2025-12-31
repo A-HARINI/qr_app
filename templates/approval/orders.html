@@ -5,24 +5,59 @@
 {% block content %}
 <div class="approval-orders">
     <div class="page-header">
-        <h1>Pending Orders - QR Code Validation</h1>
+        <h1>Pending Orders - Scan & Approve</h1>
         <a href="{{ url_for('approval_dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
     </div>
     
-    <div class="validation-info">
+    <div class="scan-approve-info">
         <div class="alert alert-info">
-            <h3>📋 Validation Process</h3>
-            <ol>
-                <li><strong>Review Order:</strong> Check order details and QR code</li>
-                <li><strong>Click "Validate & Approve":</strong> System will validate QR code uniqueness</li>
-                <li><strong>Validation Check:</strong> Checks if QR code is unique across all products and orders</li>
-                <li><strong>Result:</strong> 
-                    <ul>
-                        <li>✅ <strong>If Unique:</strong> Order confirmed → Customer sees "Customer confirmed your order!"</li>
-                        <li>❌ <strong>If Duplicate:</strong> Order cancelled → Customer sees "Contact support: 1234567890"</li>
-                    </ul>
-                </li>
-            </ol>
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>📋 Scan & Approve Process</h3>
+                    <ol>
+                        <li><strong>Review Order:</strong> Check order details</li>
+                        <li><strong>Click "📱 Scan QR":</strong> Opens QR codes for mobile scanning</li>
+                        <li><strong>Scan with Mobile:</strong> Use phone camera to scan each QR code</li>
+                        <li><strong>After All Scanned:</strong> Popup will appear to confirm order</li>
+                        <li><strong>Click "OK - Confirm Order":</strong> Approves the order</li>
+                        <li><strong>Result:</strong> 
+                            <ul>
+                                <li>✅ <strong>If All Unique:</strong> Order confirmed → Customer sees confirmation message</li>
+                                <li>❌ <strong>If Duplicate Found:</strong> Order cancelled → Customer sees "Contact support: 1234567890"</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+                <div class="col-md-4">
+                    <h5>📱 Mobile Scanning Quick Info</h5>
+                    {% if network_ip %}
+                    <p style="margin-bottom: 5px;">
+                        <strong>Network IP:</strong><br>
+                        <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 3px; font-size: 0.9em;">{{ network_ip }}</code>
+                    </p>
+                    <p style="margin-bottom: 5px; font-size: 0.85em;">
+                        <strong>Mobile URL:</strong><br>
+                        <code style="background: #f8f9fa; padding: 4px 8px; border-radius: 3px; font-size: 0.85em;">http://{{ network_ip }}:5000</code>
+                    </p>
+                    {% else %}
+                    <p style="color: #dc3545; font-size: 0.85em;">
+                        ⚠ Network IP not detected
+                    </p>
+                    {% endif %}
+                    <p><strong>For mobile QR scanning:</strong></p>
+                    <ol style="font-size: 0.9em;">
+                        <li>Click "📱 Scan QR" button</li>
+                        <li>Make sure mobile is on same Wi-Fi</li>
+                        <li>Use phone camera to scan QR codes</li>
+                        <li>Page auto-updates when scanned</li>
+                    </ol>
+                    <p style="margin-top: 10px;">
+                        <a href="{{ url_for('test_network') }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            🔗 Test Network Connection
+                        </a>
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -36,7 +71,7 @@
                     <th>Size</th>
                     <th>Color</th>
                     <th>Quantity</th>
-                    <th>QR Code</th>
+                    <th>Item QR Codes</th>
                     <th>Status</th>
                     <th>Date</th>
                     <th>Actions</th>
@@ -51,7 +86,26 @@
                         <td>{{ order.size }}</td>
                         <td><span class="color-badge" style="background-color: {{ order.color.lower() }}">{{ order.color }}</span></td>
                         <td>{{ order.quantity }}</td>
-                        <td><code>{{ order.qr_code }}</code></td>
+                        <td>
+                            {% if order['items'] %}
+                            <div>
+                                <small><strong>Item QR Codes ({{ order['items']|length }}):</strong></small>
+                                {% for item in order['items'] %}
+                                <div class="mt-1">
+                                    <code class="small">{{ item.qr_code }}</code>
+                                    {% if item.validated %}
+                                        <span class="badge bg-success badge-sm">✓ Scanned</span>
+                                    {% else %}
+                                        <span class="badge bg-warning badge-sm">⏳ Waiting</span>
+                                    {% endif %}
+                                    <span class="badge bg-info badge-sm">{{ item.item_status }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="text-muted">No items assigned</span>
+                            {% endif %}
+                        </td>
                         <td>
                             <span class="status-badge status-{{ order.status }}">
                                 {{ order.status|title }}
@@ -60,10 +114,13 @@
                         <td>{{ order.created_at if order.created_at else 'N/A' }}</td>
                         <td>
                             <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start;">
-                                <form method="POST" action="{{ url_for('approve_order', order_id=order.id) }}" style="display: inline-block;" onsubmit="return confirmValidation({{ order.id }}, '{{ order.qr_code }}');">
+                                <a href="{{ url_for('scan_order_qr', order_id=order.id) }}" class="btn btn-sm btn-primary">
+                                    📱 Scan QR
+                                </a>
+                                <form method="POST" action="{{ url_for('approve_order', order_id=order.id) }}" style="display: inline-block;" onsubmit="return confirmApprove({{ order.id }});">
                                     <input type="hidden" name="order_id" value="{{ order.id }}">
                                     <button type="submit" class="btn btn-sm btn-success">
-                                        ✓ Validate & Approve
+                                        ✓ Approve Order
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ url_for('cancel_order', order_id=order.id) }}" style="display: inline-block;" onsubmit="return confirmCancel({{ order.id }});">
@@ -81,7 +138,7 @@
         <div class="no-orders">
             <div class="alert alert-warning">
                 <h3>No Pending Orders</h3>
-                <p>There are currently no pending orders waiting for QR code validation.</p>
+                <p>There are currently no pending orders waiting for scanning and approval.</p>
                 <p><strong>Note:</strong> Orders will appear here after customers complete checkout.</p>
             </div>
         </div>
@@ -89,14 +146,12 @@
 </div>
 
 <script>
-function confirmValidation(orderId, qrCode) {
-    const message = `Validate and Approve Order #${orderId}?\n\n` +
-                    `QR Code: ${qrCode}\n\n` +
+function confirmApprove(orderId) {
+    const message = `Approve Order #${orderId}?\n\n` +
                     `The system will:\n` +
-                    `1. Confirm the order\n` +
-                    `2. Check if QR code is unique across all products and orders\n` +
-                    `3. If unique: Order confirmed ✅\n` +
-                    `4. If duplicate: Order cancelled ❌\n\n` +
+                    `1. Check if all item QR codes are unique\n` +
+                    `2. If unique: Order confirmed ✅\n` +
+                    `3. If duplicate: Order cancelled ❌\n\n` +
                     `Continue?`;
     
     return confirm(message);
@@ -127,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`Form ${index + 1}: Order ID = ${orderId ? orderId[1] : 'unknown'}, Action = ${form.action}`);
         
         form.addEventListener('submit', function(e) {
-            console.log('=== VALIDATION STARTING ===');
+            console.log('=== APPROVAL STARTING ===');
             console.log('Order ID:', orderId ? orderId[1] : 'unknown');
             console.log('Form action:', form.action);
         });

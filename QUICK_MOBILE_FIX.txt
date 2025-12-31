@@ -1,0 +1,111 @@
+================================================================================
+                    QUICK FIX: Mobile Cannot Access Server
+================================================================================
+
+PROBLEM: Mobile phone shows "Cannot reach this page" when trying to access
+         http://192.168.x.x:5000
+
+================================================================================
+SOLUTION - DO THESE 3 STEPS:
+================================================================================
+
+STEP 1: Fix Windows Firewall
+-----------------------------
+Double-click: FIX_MOBILE_ACCESS.bat
+
+This will automatically configure Windows Firewall to allow mobile access.
+
+If it says "Access Denied", right-click the file and select "Run as Administrator"
+
+
+STEP 2: Test the Connection
+-----------------------------
+Double-click: TEST_MOBILE_ACCESS.bat
+
+This will show you:
+- Your network IP address
+- Whether server is running
+- Whether firewall is configured
+- Test URLs to try on mobile
+
+
+STEP 3: Restart Server
+-----------------------
+1. Close any running server windows
+2. Double-click: START_HERE_FOR_OUTPUT.bat
+3. Wait for: "Running on http://0.0.0.0:5000"
+4. Look for: "Network: http://192.168.x.x:5000" (your IP)
+
+
+STEP 4: Test on Mobile
+-----------------------
+1. Make sure mobile is on SAME Wi-Fi network
+2. On mobile browser, type: http://[YOUR_IP]:5000
+   (Replace [YOUR_IP] with the IP from STEP 2)
+3. Should see the login page!
+
+
+================================================================================
+IF STILL NOT WORKING:
+================================================================================
+
+1. Check Wi-Fi Network
+   - Both devices MUST be on same Wi-Fi
+   - Check network name on both devices
+
+2. Check Router Settings
+   - Some routers have "AP Isolation" enabled
+   - This blocks device-to-device communication
+   - Disable it in router settings
+
+3. Try Different Port
+   - Change port in app.py to 8000
+   - Update firewall rule
+   - Test: http://[YOUR_IP]:8000
+
+4. Temporarily Disable Firewall (for testing only)
+   - Windows Security → Firewall → Turn off
+   - Test if mobile can access
+   - If works, firewall is the issue - re-enable and configure
+
+5. Check Server Output
+   - Look at server window
+   - Should show: "Running on http://0.0.0.0:5000"
+   - If shows "127.0.0.1" only, server is not accessible from network
+
+
+================================================================================
+VERIFICATION CHECKLIST:
+================================================================================
+
+[ ] Server running (check server window)
+[ ] Server shows "Running on http://0.0.0.0:5000"
+[ ] Firewall rule created (run FIX_MOBILE_ACCESS.bat)
+[ ] Both devices on same Wi-Fi network
+[ ] Using correct IP address (from TEST_MOBILE_ACCESS.bat)
+[ ] Router doesn't have AP Isolation enabled
+
+
+================================================================================
+FILES TO USE:
+================================================================================
+
+FIX_MOBILE_ACCESS.bat    → Fix Windows Firewall (RUN THIS FIRST!)
+TEST_MOBILE_ACCESS.bat   → Test connection and get IP address
+START_HERE_FOR_OUTPUT.bat → Start server with network info
+MOBILE_ACCESS_FIX.md      → Detailed troubleshooting guide
+
+
+================================================================================
+QUICK TEST:
+================================================================================
+
+1. Run: TEST_MOBILE_ACCESS.bat
+2. Note your IP address (e.g., 192.168.1.100)
+3. On mobile, open: http://192.168.1.100:5000
+4. If you see the page → Working! ✓
+5. If "Cannot reach" → Run FIX_MOBILE_ACCESS.bat
+
+
+================================================================================
+

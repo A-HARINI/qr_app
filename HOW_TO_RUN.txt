@@ -1,0 +1,148 @@
+================================================================================
+                        HOW TO RUN THIS PROJECT
+================================================================================
+
+EASIEST WAY (RECOMMENDED):
+--------------------------
+1. Double-click: START_HERE_FOR_OUTPUT.bat
+2. Keep the window open
+3. Wait for: "* Running on http://0.0.0.0:5000"
+4. Open browser: http://127.0.0.1:5000
+
+
+STEP BY STEP:
+-------------
+
+STEP 1: Start the Server
+-------------------------
+Double-click: START_HERE_FOR_OUTPUT.bat
+
+OR open Command Prompt and run:
+   python app.py
+
+IMPORTANT: Keep the server window OPEN! Don't close it!
+
+
+STEP 2: Wait for Server to Start
+---------------------------------
+Look for this message in the server window:
+   "* Running on http://0.0.0.0:5000"
+
+When you see this, the server is ready!
+
+
+STEP 3: Open in Browser
+-----------------------
+Open your web browser (Chrome, Firefox, Edge)
+
+Type this in the address bar:
+   http://127.0.0.1:5000
+
+IMPORTANT:
+   - Use http:// NOT https://
+   - Use 127.0.0.1 NOT localhost
+   - Use :5000 NOT :5001
+
+
+STEP 4: You Should See
+----------------------
+The LOGIN PAGE of your QR App
+
+Default login credentials (if you haven't created users yet):
+   - Create an account or login
+   - Admin users can manage products
+   - Approval admin can validate QR codes
+
+
+================================================================================
+REQUIREMENTS (Make sure these are installed):
+================================================================================
+
+1. Python 3.7 or higher
+   Check: python --version
+
+2. Flask and other dependencies
+   Install: pip install flask qrcode pillow
+
+   Or install all from requirements.txt:
+   pip install -r requirements.txt
+
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+Problem: "python is not recognized"
+Solution: 
+   - Python is not installed or not in PATH
+   - Install Python from python.org
+   - Make sure to check "Add Python to PATH" during installation
+
+Problem: "No module named 'flask'"
+Solution:
+   pip install flask qrcode pillow
+
+Problem: "Port 5000 already in use"
+Solution:
+   - Close other Python/Flask processes
+   - Or change port in app.py (line with app.run)
+
+Problem: "Cannot reach this page"
+Solution:
+   1. Make sure server window is open
+   2. Check you see "* Running on http://0.0.0.0:5000"
+   3. Use exactly: http://127.0.0.1:5000
+   4. Wait 5 seconds after starting server
+
+Problem: Server window closes immediately
+Solution:
+   - Check for error messages
+   - Install dependencies: pip install flask qrcode pillow
+   - Check Python is installed: python --version
+
+
+================================================================================
+QUICK FILES:
+================================================================================
+
+START_HERE_FOR_OUTPUT.bat    → Easiest way to start (RECOMMENDED)
+SIMPLE_START.bat             → Simple server start
+START_SERVER.bat             → Alternative start method
+FIX_CANNOT_REACH_PAGE.bat    → If page doesn't load
+
+CHECK_SERVER.bat             → Check if server is running
+VIEW_PREVIOUS_OUTPUT.bat     → View server output
+
+
+================================================================================
+MOBILE ACCESS:
+================================================================================
+
+To access from mobile device:
+
+1. Make sure mobile is on SAME Wi-Fi network as computer
+2. Start server (START_HERE_FOR_OUTPUT.bat)
+3. Look for "Network: http://192.168.x.x:5000" in server window
+4. On mobile, open browser and type: http://192.168.x.x:5000
+   (Replace 192.168.x.x with the IP shown in server window)
+
+If mobile cannot connect:
+   - Check Windows Firewall allows Python
+   - Make sure same Wi-Fi network
+   - Check server shows "Network: http://..." message
+
+
+================================================================================
+STOPPING THE SERVER:
+================================================================================
+
+In the server window, press:
+   CTRL + C
+
+Then close the window.
+
+
+================================================================================
+
+
+

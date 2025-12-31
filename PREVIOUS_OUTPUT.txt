@@ -1,0 +1,126 @@
+================================================================================
+                    PREVIOUS SERVER OUTPUT (What You Should See)
+================================================================================
+
+When you start the server (python app.py or START_HERE_FOR_OUTPUT.bat),
+you should see output like this:
+
+================================================================================
+
+Starting QR App (SQLite Version)...
+==================================================
+
+[INFO] Initializing database...
+[OK] Database initialized successfully
+
+Server starting on http://127.0.0.1:5000
+Press CTRL+C to stop the server
+==================================================
+
+======================================================================
+STARTING FLASK SERVER
+======================================================================
+[OK] Port 5000 is available
+
+[SUCCESS] Server will be accessible at:
+  Local:    http://127.0.0.1:5000
+  Network:  http://192.168.x.x:5000
+
+[STATUS DASHBOARD]
+  View output screen: http://127.0.0.1:5000/status
+
+[MOBILE ACCESS]
+  URL: http://192.168.x.x:5000
+  Make sure mobile is on the SAME Wi-Fi network!
+
+[TEST ENDPOINTS]
+  Network test: http://192.168.x.x:5000/test/network
+  Local test:   http://127.0.0.1:5000/test/network
+
+[FIREWALL]
+  If mobile cannot connect, check Windows Firewall:
+  1. Allow Python through firewall
+  2. Or create rule for port 5000
+  3. See NETWORK_TROUBLESHOOTING.md for details
+======================================================================
+
+ * Running on http://0.0.0.0:5000
+ * Debug mode: on
+
+================================================================================
+WHAT THIS OUTPUT MEANS:
+================================================================================
+
+1. "Starting QR App (SQLite Version)..." 
+   → Server is initializing
+
+2. "[OK] Port 5000 is available"
+   → Port is free, server can start
+
+3. "[SUCCESS] Server will be accessible at..."
+   → Server URLs where you can access the app
+
+4. "* Running on http://0.0.0.0:5000"
+   → Server is now running and ready!
+   → This is the most important message!
+
+5. "* Debug mode: on"
+   → Server is in debug mode (shows errors)
+
+================================================================================
+HOW TO SEE THIS OUTPUT:
+================================================================================
+
+METHOD 1: Console Window (Live Output)
+---------------------------------------
+1. Double-click: START_HERE_FOR_OUTPUT.bat
+2. Keep the window open
+3. You'll see all output in real-time
+
+METHOD 2: Save Output to File
+-----------------------------
+1. Double-click: START_WITH_CAPTURE.bat
+2. All output will be saved to: server_output.log
+3. View later: VIEW_PREVIOUS_OUTPUT.bat
+
+METHOD 3: View Example Output
+------------------------------
+1. Double-click: SHOW_PREVIOUS_OUTPUT.bat
+2. Shows what output should look like
+
+================================================================================
+IMPORTANT MESSAGES TO LOOK FOR:
+================================================================================
+
+✅ "[OK] Port 5000 is available"
+   → Good! Server can start
+
+✅ "* Running on http://0.0.0.0:5000"
+   → Server is running! You can now access it
+
+❌ "[WARNING] Port 5000 appears to be in use!"
+   → Another process is using port 5000
+   → Solution: Close other Flask/Python processes
+
+❌ "[ERROR] Port 5000 is already in use!"
+   → Port conflict
+   → Solution: Kill the process using port 5000
+
+❌ "Warning: Database initialization failed"
+   → Database issue
+   → Solution: Check database file permissions
+
+================================================================================
+FILES TO VIEW OUTPUT:
+================================================================================
+
+START_HERE_FOR_OUTPUT.bat    → See live output in console
+START_WITH_CAPTURE.bat       → Save output to file
+VIEW_PREVIOUS_OUTPUT.bat     → View saved output
+SHOW_PREVIOUS_OUTPUT.bat     → See example output
+PREVIOUS_OUTPUT.txt          → This file (text version)
+
+================================================================================
+
+
+

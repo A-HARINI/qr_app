@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Validate QR Code - Approval Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>QR Code Validation Scanner</h3>
+            <a href="{{ url_for('approval_dashboard') }}" class="btn btn-secondary btn-sm">← Back to Dashboard</a>
+        </div>
+        <div class="card-body">
+            <!-- Camera/Scanner Area -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Scan QR Code</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <!-- Video element for camera -->
+                            <div id="camera-container" style="position: relative;">
+                                <video id="video" width="100%" autoplay playsinline style="max-width: 500px; border: 2px solid #ddd;"></video>
+                                <canvas id="canvas" style="display: none;"></canvas>
+                            </div>
+                            
+                            <!-- Manual QR Code Input -->
+                            <div class="mt-3">
+                                <label>Or Enter QR Code Manually:</label>
+                                <input type="text" id="manual-qr-input" class="form-control" placeholder="Paste QR code here">
+                                <button onclick="validateManualQR()" class="btn btn-primary mt-2">Validate</button>
+                            </div>
+                            
+                            <!-- Control Buttons -->
+                            <div class="mt-3">
+                                <button id="start-camera" onclick="startCamera()" class="btn btn-success">Start Camera</button>
+                                <button id="stop-camera" onclick="stopCamera()" class="btn btn-danger" style="display: none;">Stop Camera</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Validation Results -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Validation Result</h5>
+                        </div>
+                        <div class="card-body" id="validation-result">
+                            <p class="text-muted">Scan a QR code to validate...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+let html5QrCode;
+let scanning = false;
+
+function startCamera() {
+    const video = document.getElementById('video');
+    const startBtn = document.getElementById('start-camera');
+    const stopBtn = document.getElementById('stop-camera');
+    
+    html5QrCode = new Html5Qrcode("camera-container");
+    
+    Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+            const cameraId = devices[0].id;
+            
+            html5QrCode.start(
+                cameraId,
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                (decodedText, decodedResult) => {
+                    // QR code detected
+                    validateQRCode(decodedText);
+                    stopCamera();
+                },
+                (errorMessage) => {
+                    // Ignore scanning errors
+                }
+            ).catch((err) => {
+                console.error("Unable to start camera:", err);
+                alert("Unable to access camera. Please check permissions.");
+            });
+            
+            scanning = true;
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+        } else {
+            alert("No camera found. Please use manual input.");
+        }
+    }).catch(err => {
+        console.error("Camera access error:", err);
+        alert("Camera access error. Please use manual input.");
+    });
+}
+
+function stopCamera() {
+    if (html5QrCode && scanning) {
+        html5QrCode.stop().then(() => {
+            scanning = false;
+            document.getElementById('start-camera').style.display = 'inline-block';
+            document.getElementById('stop-camera').style.display = 'none';
+        }).catch((err) => {
+            console.error("Error stopping camera:", err);
+        });
+    }
+}
+
+function validateManualQR() {
+    const qrCode = document.getElementById('manual-qr-input').value.trim();
+    if (qrCode) {
+        validateQRCode(qrCode);
+    } else {
+        alert("Please enter a QR code");
+    }
+}
+
+function validateQRCode(qrCode) {
+    // Show loading
+    document.getElementById('validation-result').innerHTML = '<p>Validating QR code...</p>';
+    
+    // Send validation request
+    fetch('{{ url_for("validate_qr_code_scanner") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ qr_code: qrCode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('validation-result').innerHTML = `
+                <div class="alert alert-success">
+                    <h5>✅ Validation Successful!</h5>
+                    <p><strong>Item ID:</strong> ${data.item_id}</p>
+                    <p><strong>Product:</strong> ${data.product_info}</p>
+                    <p><strong>Status:</strong> ${data.status}</p>
+                    <p><strong>QR Code:</strong> <code>${data.qr_code}</code></p>
+                    <p class="mt-3"><strong>${data.message || 'Item is now validated and ready for orders!'}</strong></p>
+                </div>
+            `;
+            
+            // Show success alert/popup
+            alert('✅ QR Code Validated!\n\n' + 
+                  `Item: ${data.product_info}\n` +
+                  `QR Code: ${data.qr_code}\n\n` +
+                  'Item is now ready for customer orders!');
+            
+            // Clear manual input
+            document.getElementById('manual-qr-input').value = '';
+            
+            // Auto-start camera again after 3 seconds
+            setTimeout(() => {
+                if (!scanning) {
+                    startCamera();
+                }
+            }, 3000);
+        } else {
+            document.getElementById('validation-result').innerHTML = `
+                <div class="alert alert-danger">
+                    <h5>❌ Validation Failed</h5>
+                    <p>${data.message}</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('validation-result').innerHTML = `
+            <div class="alert alert-danger">
+                <h5>Error</h5>
+                <p>An error occurred during validation. Please try again.</p>
+            </div>
+        `;
+    });
+}
+
+// Allow Enter key in manual input
+document.getElementById('manual-qr-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        validateManualQR();
+    }
+});
+</script>
+{% endblock %}
+

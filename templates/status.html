@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Status - QR App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #667eea;
+        }
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .status-label {
+            color: #666;
+            font-weight: 500;
+        }
+        .status-value {
+            font-weight: 600;
+            color: #333;
+        }
+        .status-online {
+            color: #10b981;
+        }
+        .status-offline {
+            color: #ef4444;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .output-console {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 30px;
+        }
+        .output-line {
+            margin: 5px 0;
+            white-space: pre-wrap;
+        }
+        .output-line.info {
+            color: #4fc3f7;
+        }
+        .output-line.success {
+            color: #81c784;
+        }
+        .output-line.error {
+            color: #e57373;
+        }
+        .output-line.warning {
+            color: #ffb74d;
+        }
+        .action-buttons {
+            padding: 30px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ Server Status Dashboard</h1>
+            <p>Real-time server monitoring and diagnostics</p>
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>🌐 Server Status</h3>
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span class="status-value status-online" id="server-status">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">URL:</span>
+                    <span class="status-value">http://127.0.0.1:5000</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Port:</span>
+                    <span class="status-value">5000</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Host:</span>
+                    <span class="status-value">0.0.0.0</span>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h3>🔗 Connection Test</h3>
+                <div class="status-item">
+                    <span class="status-label">Local Access:</span>
+                    <span class="status-value" id="local-status">Testing...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Network Access:</span>
+                    <span class="status-value" id="network-status">Testing...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Database:</span>
+                    <span class="status-value" id="db-status">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Last Check:</span>
+                    <span class="status-value" id="last-check">-</span>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h3>📊 Quick Info</h3>
+                <div class="status-item">
+                    <span class="status-label">Flask Version:</span>
+                    <span class="status-value">{{ flask_version }}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Python Version:</span>
+                    <span class="status-value">{{ python_version }}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Environment:</span>
+                    <span class="status-value">{{ environment }}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Debug Mode:</span>
+                    <span class="status-value">{{ debug_mode }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="output-console" id="output-console">
+            <div class="output-line info">[INFO] Server Status Dashboard loaded</div>
+            <div class="output-line info">[INFO] Checking server status...</div>
+            <div class="output-line" id="console-output">Loading...</div>
+            <div class="output-line" id="server-logs"></div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="/" class="btn">🏠 Go to Homepage</a>
+            <a href="/test/network" class="btn btn-secondary">🔧 Network Test</a>
+            <a href="http://127.0.0.1:5000" class="btn" target="_blank">🚀 Open App</a>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="checkStatus()">🔄 Refresh Status</button>
+
+    <script>
+        function updateStatus() {
+            const now = new Date();
+            document.getElementById('last-check').textContent = now.toLocaleTimeString();
+            
+            // Test server connection
+            fetch('/api/status')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Server not responding');
+                })
+                .then(data => {
+                    document.getElementById('server-status').textContent = '🟢 Online';
+                    document.getElementById('server-status').className = 'status-value status-online';
+                    document.getElementById('local-status').innerHTML = '<span class="status-badge badge-success">✓ Accessible</span>';
+                    document.getElementById('network-status').innerHTML = '<span class="status-badge badge-success">✓ Available</span>';
+                    document.getElementById('db-status').innerHTML = '<span class="status-badge badge-success">✓ Connected</span>';
+                    
+                    const console = document.getElementById('console-output');
+                    const logs = document.getElementById('server-logs');
+                    console.innerHTML = `
+                        <div class="output-line success">[SUCCESS] Server is running and responding</div>
+                        <div class="output-line info">[INFO] Status: ${data.status || 'OK'}</div>
+                        <div class="output-line info">[INFO] Database: ${data.database || 'connected'}</div>
+                        <div class="output-line info">[INFO] Timestamp: ${new Date(data.timestamp * 1000).toLocaleString()}</div>
+                    `;
+                    logs.innerHTML = `
+                        <div class="output-line info">[INFO] Server URL: http://127.0.0.1:5000</div>
+                        <div class="output-line info">[INFO] Status Dashboard: http://127.0.0.1:5000/status</div>
+                        <div class="output-line info">[INFO] Homepage: http://127.0.0.1:5000/</div>
+                    `;
+                })
+                .catch(error => {
+                    document.getElementById('server-status').textContent = '🔴 Offline';
+                    document.getElementById('server-status').className = 'status-value status-offline';
+                    document.getElementById('local-status').innerHTML = '<span class="status-badge badge-error">✗ Not Accessible</span>';
+                    document.getElementById('network-status').innerHTML = '<span class="status-badge badge-error">✗ Not Available</span>';
+                    document.getElementById('db-status').innerHTML = '<span class="status-badge badge-error">✗ Unknown</span>';
+                    
+                    const console = document.getElementById('console-output');
+                    const logs = document.getElementById('server-logs');
+                    console.innerHTML = `
+                        <div class="output-line error">[ERROR] Server is not responding</div>
+                        <div class="output-line warning">[WARNING] Make sure server is running</div>
+                        <div class="output-line info">[INFO] To start server: Double-click START_HERE_FOR_OUTPUT.bat</div>
+                        <div class="output-line info">[INFO] Or run: python app.py</div>
+                    `;
+                    logs.innerHTML = `
+                        <div class="output-line error">[ERROR] Cannot connect to server</div>
+                        <div class="output-line info">[INFO] Check if server window is open</div>
+                        <div class="output-line info">[INFO] Look for "Running on http://0.0.0.0:5000" message</div>
+                    `;
+                });
+        }
+
+        function checkStatus() {
+            updateStatus();
+        }
+
+        // Check status on load and every 5 seconds
+        updateStatus();
+        setInterval(updateStatus, 5000);
+    </script>
+</body>
+</html>
+
+

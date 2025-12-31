@@ -28,10 +28,21 @@
                             <td>{{ item.category }}</td>
                             <td>{{ item.size }}</td>
                             <td><span class="color-badge" style="background-color: {{ item.color.lower() }}">{{ item.color }}</span></td>
-                            <td>{{ item.quantity }}</td>
+                            <td>
+                                <input type="number" 
+                                       name="quantity" 
+                                       value="{{ item.quantity }}" 
+                                       min="1" 
+                                       max="{{ item.stock }}" 
+                                       class="form-control" 
+                                       style="width: 80px; display: inline-block; text-align: center;"
+                                       id="quantity-{{ item.id }}"
+                                       onchange="updateQuantity({{ item.id }}, {{ item.stock }})"
+                                       onblur="updateQuantity({{ item.id }}, {{ item.stock }})">
+                            </td>
                             <td>{{ item.stock }}</td>
                             <td>
-                                <a href="{{ url_for('remove_from_cart', cart_id=item.id) }}" class="btn btn-danger btn-sm">Remove</a>
+                                <a href="{{ url_for('remove_from_cart', cart_id=item.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this item?')">Remove</a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -56,6 +67,83 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+function updateQuantity(cartId, maxStock) {
+    const quantityInput = document.getElementById('quantity-' + cartId);
+    if (!quantityInput) return;
+    
+    let quantity = parseInt(quantityInput.value);
+    
+    // Validate quantity
+    if (isNaN(quantity) || quantity < 1) {
+        quantity = 1;
+        quantityInput.value = 1;
+    }
+    
+    if (quantity > maxStock) {
+        quantity = maxStock;
+        quantityInput.value = maxStock;
+        alert('Quantity cannot exceed available stock: ' + maxStock);
+        return;
+    }
+    
+    // Show loading state
+    const originalValue = quantityInput.value;
+    quantityInput.disabled = true;
+    quantityInput.style.opacity = '0.6';
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('cart_id', cartId);
+    formData.append('quantity', quantity);
+    
+    // Update quantity via AJAX
+    fetch('/update_cart_quantity', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        quantityInput.disabled = false;
+        quantityInput.style.opacity = '1';
+        
+        if (data.success) {
+            // Show success message briefly
+            const parent = quantityInput.parentElement;
+            
+            // Remove any existing success message
+            const existingMsg = parent.querySelector('.success-msg');
+            if (existingMsg) {
+                existingMsg.remove();
+            }
+            
+            const successMsg = document.createElement('span');
+            successMsg.textContent = ' ✓ Updated';
+            successMsg.style.color = 'green';
+            successMsg.style.fontSize = '12px';
+            successMsg.style.marginLeft = '5px';
+            successMsg.className = 'success-msg';
+            parent.appendChild(successMsg);
+            
+            setTimeout(() => {
+                successMsg.remove();
+            }, 2000);
+        } else {
+            // Revert to original value on error
+            quantityInput.value = originalValue;
+            alert(data.message || 'Failed to update quantity');
+        }
+    })
+    .catch(error => {
+        quantityInput.disabled = false;
+        quantityInput.style.opacity = '1';
+        quantityInput.value = originalValue;
+        console.error('Error updating quantity:', error);
+        alert('Error updating quantity. Please try again.');
+    });
+}
+</script>
 {% endblock %}
 
 

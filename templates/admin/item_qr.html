@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Item QR Code{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h4>Item QR Code</h4>
+        </div>
+        <div class="card-body text-center">
+            <h5 class="mb-3">{{ item_info }}</h5>
+            
+            <!-- QR Code Image -->
+            <div class="mb-4">
+                <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="img-fluid" style="max-width: 400px;">
+            </div>
+            
+            <!-- QR Code Text -->
+            <div class="mb-3">
+                <p class="mb-2"><strong>QR Code:</strong></p>
+                <code class="fs-5">{{ qr_code }}</code>
+            </div>
+            
+            <!-- Item Details -->
+            <div class="mt-4">
+                <table class="table table-bordered mx-auto" style="max-width: 500px;">
+                    <tr>
+                        <th>Item ID</th>
+                        <td>{{ item.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Product</th>
+                        <td>{{ item.category }} {{ item.size }} {{ item.color }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>
+                            {% if item.status == 'available' %}
+                                <span class="badge bg-success">Available</span>
+                            {% elif item.status == 'reserved' %}
+                                <span class="badge bg-warning">Reserved</span>
+                            {% elif item.status == 'sold' %}
+                                <span class="badge bg-info">Sold</span>
+                            {% elif item.status == 'damaged' %}
+                                <span class="badge bg-danger">Damaged</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created At</th>
+                        <td>{{ item.created_at }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Actions -->
+            <div class="mt-4">
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="bi bi-printer"></i> Print QR Code
+                </button>
+                <a href="{{ url_for('admin_items', product_id=item.product_id) }}" class="btn btn-secondary">
+                    ← Back to Items
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .card-header, .btn, nav, footer {
+        display: none;
+    }
+}
+</style>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

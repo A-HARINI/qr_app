@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Item QR Codes - {{ product.category }} {{ product.size }} {{ product.color }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Item QR Codes: {{ product.category }} {{ product.size }} {{ product.color }}</h2>
+        <a href="{{ url_for('admin_products') }}" class="btn btn-secondary">← Back to Products</a>
+    </div>
+
+    <!-- Status Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">{{ status_counts.available }}</h5>
+                    <p class="card-text">Available</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">{{ status_counts.reserved }}</h5>
+                    <p class="card-text">Reserved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">{{ status_counts.sold }}</h5>
+                    <p class="card-text">Sold</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">{{ status_counts.damaged }}</h5>
+                    <p class="card-text">Damaged</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items QR Codes Grid -->
+    <div class="card">
+        <div class="card-header">
+            <h5>All Item QR Codes ({{ items|length }} total)</h5>
+        </div>
+        <div class="card-body">
+            {% if items %}
+            <div class="row">
+                {% for item in items %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <h6 class="card-title">Item #{{ item.id }}</h6>
+                            
+                            <!-- QR Code Image -->
+                            <div class="mb-3">
+                                <img src="data:image/png;base64,{{ item.qr_image }}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                            </div>
+                            
+                            <!-- QR Code Text -->
+                            <div class="mb-2">
+                                <code class="small">{{ item.qr_code }}</code>
+                            </div>
+                            
+                            <!-- Status Badge -->
+                            <div class="mb-2">
+                                {% if item.status == 'available' %}
+                                    <span class="badge bg-success">Available</span>
+                                {% elif item.status == 'reserved' %}
+                                    <span class="badge bg-warning">Reserved</span>
+                                {% elif item.status == 'sold' %}
+                                    <span class="badge bg-info">Sold</span>
+                                {% elif item.status == 'damaged' %}
+                                    <span class="badge bg-danger">Damaged</span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Actions -->
+                            <a href="{{ url_for('generate_item_qr', item_id=item.id) }}" class="btn btn-sm btn-primary" target="_blank">
+                                <i class="bi bi-qr-code"></i> View Full QR
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-center text-muted">No items found for this product.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,70 @@
+================================================================================
+                    HOW TO START THE SERVER - SIMPLE GUIDE
+================================================================================
+
+STEP 1: START THE SERVER
+-------------------------
+Double-click this file: START_SERVER.bat
+
+OR run in command prompt:
+    python app.py
+
+IMPORTANT: Keep the server window OPEN! Don't close it!
+
+
+STEP 2: WAIT FOR THIS MESSAGE
+------------------------------
+Look for this in the server window:
+    * Running on http://0.0.0.0:5000
+
+When you see this, the server is ready!
+
+
+STEP 3: OPEN YOUR BROWSER
+--------------------------
+Type this EXACTLY in your browser address bar:
+    http://127.0.0.1:5000
+
+NOT https://
+NOT localhost
+NOT 127.0.0.1:5001
+EXACTLY: http://127.0.0.1:5000
+
+
+STEP 4: WHAT YOU SHOULD SEE
+----------------------------
+You should see the LOGIN PAGE
+
+If you see "Cannot reach this page":
+    1. Check the server window is still open
+    2. Check you see "Running on http://0.0.0.0:5000"
+    3. Check you're using http:// not https://
+    4. Try a different browser
+
+
+TROUBLESHOOTING
+---------------
+Problem: "Port 5000 already in use"
+Solution: Close other Python windows, then try again
+
+Problem: "Cannot reach this page" but server is running
+Solution: 
+    - Make sure URL is exactly: http://127.0.0.1:5000
+    - Try: http://localhost:5000
+    - Check Windows Firewall
+
+Problem: Server window closes immediately
+Solution: Check for error messages in the window
+
+
+NEED HELP?
+----------
+1. Check VERIFY_SERVER.md for detailed steps
+2. Run: python test_minimal_server.py (tests if Flask works)
+3. Check server window for error messages
+
+================================================================================
+
+
+
+

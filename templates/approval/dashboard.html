@@ -15,6 +15,10 @@
     </div>
     
     <div class="admin-menu">
+        <a href="{{ url_for('validate_qr_scanner_page') }}" class="menu-card">
+            <h3>Validate QR Codes</h3>
+            <p>Scan and validate item QR codes using camera/scanner</p>
+        </a>
         <a href="{{ url_for('approval_orders') }}" class="menu-card">
             <h3>Validate Orders</h3>
             <p>Review and validate QR codes for pending orders</p>

@@ -406,3 +406,25 @@ def generate_item_qr(item_id):
                          qr_image=img_str,
                          item_info=item_info)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

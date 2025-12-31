@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Order QR Codes - Approval Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h3>📱 Scan QR Codes - Order #{{ order.id }}</h3>
+            <a href="{{ url_for('approval_orders') }}" class="btn btn-secondary btn-sm">← Back to Orders</a>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h5>📱 Mobile Scanning Instructions</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 style="color: #0d6efd; margin-top: 10px;">Step-by-Step:</h6>
+                        <ol style="margin-bottom: 15px;">
+                            <li><strong>Make sure your mobile phone is on the SAME Wi-Fi network</strong> as this computer</li>
+                            <li>Open your phone's camera app or QR scanner app</li>
+                            <li>Point camera at the QR code on this screen</li>
+                            <li>Tap the notification/link that appears</li>
+                            <li>Product details will open on your phone</li>
+                            <li>This page will automatically update when scanned</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 style="color: #0d6efd; margin-top: 10px;">Network Information:</h6>
+                        {% if network_ip %}
+                        <p style="margin-bottom: 5px;">
+                            <strong>Network IP:</strong> <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">{{ network_ip }}</code>
+                        </p>
+                        <p style="margin-bottom: 5px;">
+                            <strong>Server URL:</strong> <code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">http://{{ network_ip }}:5000</code>
+                        </p>
+                        {% else %}
+                        <p style="color: #dc3545; font-size: 0.9em;">
+                            ⚠ Could not detect network IP. Mobile scanning may not work.
+                        </p>
+                        {% endif %}
+                        {% if items and items[0].scan_url %}
+                        <p style="margin-top: 10px; margin-bottom: 5px; font-size: 0.85em;">
+                            <strong>Sample Scan URL:</strong><br>
+                            <code style="font-size: 0.75em; word-break: break-all; background: #f8f9fa; padding: 4px; display: block; border-radius: 3px;">{{ items[0].scan_url }}</code>
+                        </p>
+                        {% endif %}
+                        <p style="margin-top: 10px;">
+                            <a href="{{ url_for('test_network') }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                🔗 Test Network Connection
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="alert alert-warning" style="margin-top: 15px; margin-bottom: 0;">
+                    <strong>⚠ Troubleshooting:</strong> If mobile cannot scan:
+                    <ul style="margin-bottom: 0; margin-top: 5px;">
+                        <li>Check both devices are on the same Wi-Fi network</li>
+                        <li>Check Windows Firewall allows Python/port 5000</li>
+                        <li>Try manually typing the scan URL in mobile browser</li>
+                        <li>Make sure server is running on <code>0.0.0.0:5000</code> (not just localhost)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="order-info mb-4">
+                <h5>Order Details:</h5>
+                <p><strong>Customer:</strong> {{ order.username }}</p>
+                <p><strong>Product:</strong> {{ order.category }} - {{ order.size }} - {{ order.color }}</p>
+                <p><strong>Quantity:</strong> {{ order.quantity }}</p>
+            </div>
+            
+            <div id="scan-status" class="alert alert-warning">
+                <h5>Scanning Status</h5>
+                <p>Scanned: <span id="scanned-count">{{ items|selectattr('validated')|list|length }}</span> / <span id="total-count">{{ items|length }}</span></p>
+                <div class="progress mt-2">
+                    <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: {{ (items|selectattr('validated')|list|length / items|length * 100) if items|length > 0 else 0 }}%"></div>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    <strong>Note:</strong> Scan QR codes using your mobile phone. This page will update automatically when items are scanned.
+                </p>
+            </div>
+            
+            <div id="success-message" class="alert alert-success" style="display: none;">
+                <h4>✅ All QR Codes Scanned Successfully!</h4>
+                <p>Scan all items, then click OK in the popup to confirm the order.</p>
+            </div>
+            
+            <h5 class="mt-4">QR Codes to Scan:</h5>
+            <div class="row">
+                {% for item in items %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6>Item #{{ item.id }}</h6>
+                            <img src="data:image/png;base64,{{ item.qr_image }}" 
+                                 alt="QR Code - Scan with Mobile Phone" 
+                                 class="img-fluid mb-2" 
+                                 style="max-width: 250px; min-width: 200px; border: 2px solid #dee2e6; border-radius: 8px; padding: 10px; background: white;"
+                                 title="Scan this QR code with your mobile phone camera">
+                            <p class="small"><code>{{ item.qr_code }}</code></p>
+                            <div id="item-status-{{ item.id }}" class="mt-2">
+                                {% if item.validated %}
+                                    <span class="badge bg-success">✓ Scanned</span>
+                                {% else %}
+                                    <span class="badge bg-warning">⏳ Waiting</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let orderId = {{ order.id }};
+let totalItems = {{ items|length }};
+let pollingInterval;
+let initialScannedCount = {{ items|selectattr('validated')|list|length }};
+let lastScannedCount = initialScannedCount;
+let pageLoadTime = Date.now();
+
+function checkScanStatus() {
+    fetch(`/approval/check_scan_status/${orderId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let scannedCount = data.scanned_items;
+                let totalCount = data.total_items;
+                
+                // Only update if count changed (actual new scan happened)
+                if (scannedCount !== lastScannedCount) {
+                    let newlyScanned = scannedCount - lastScannedCount;
+                    lastScannedCount = scannedCount;
+                    
+                    // Update progress
+                    document.getElementById('scanned-count').textContent = scannedCount;
+                    document.getElementById('total-count').textContent = totalCount;
+                    let progressPercent = (scannedCount / totalCount) * 100;
+                    document.getElementById('progress-bar').style.width = progressPercent + '%';
+                    
+                    // Update individual item status
+                    data.items.forEach(item => {
+                        let statusElement = document.getElementById(`item-status-${item.id}`);
+                        if (statusElement) {
+                            if (item.validated) {
+                                statusElement.innerHTML = '<span class="badge bg-success">✓ Scanned</span>';
+                            } else {
+                                statusElement.innerHTML = '<span class="badge bg-warning">⏳ Waiting</span>';
+                            }
+                        }
+                    });
+                    
+                    // Show "Scanned Successfully" popup ONLY when ALL items are scanned
+                    if (data.all_scanned && scannedCount === totalCount && newlyScanned > 0) {
+                        showScanSuccessPopup(scannedCount);
+                    }
+                } else {
+                    // Update display even if count didn't change (for initial load)
+                    document.getElementById('scanned-count').textContent = scannedCount;
+                    document.getElementById('total-count').textContent = totalCount;
+                    let progressPercent = (scannedCount / totalCount) * 100;
+                    document.getElementById('progress-bar').style.width = progressPercent + '%';
+                    
+                    // Update individual item status
+                    data.items.forEach(item => {
+                        let statusElement = document.getElementById(`item-status-${item.id}`);
+                        if (statusElement) {
+                            if (item.validated) {
+                                statusElement.innerHTML = '<span class="badge bg-success">✓ Scanned</span>';
+                            } else {
+                                statusElement.innerHTML = '<span class="badge bg-warning">⏳ Waiting</span>';
+                            }
+                        }
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking scan status:', error);
+        });
+}
+
+function showScanSuccessPopup(count) {
+    // Create and show popup for scanned items
+    let popup = document.getElementById('scan-success-popup');
+    if (!popup) {
+        popup = document.createElement('div');
+        popup.id = 'scan-success-popup';
+        popup.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 20px; padding: 40px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 3000; animation: popupSlide 0.3s ease-out;';
+        document.body.appendChild(popup);
+    }
+    
+    popup.innerHTML = `
+        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 40px; color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+            ✓
+        </div>
+        <h2 style="color: #1f2937; margin-bottom: 15px; font-size: 24px; font-weight: 700;">Scanned Successfully!</h2>
+        <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 10px; padding: 15px; margin: 20px 0; text-align: left;">
+            <p style="color: #065f46; font-size: 14px; margin: 5px 0;"><strong>✓ Unique Code Scanned</strong></p>
+            <p style="color: #065f46; font-size: 14px; margin: 5px 0;"><strong>✓ Processed</strong></p>
+            <p style="color: #065f46; font-size: 14px; margin: 5px 0;"><strong>✓ Ready to Approve Order</strong></p>
+        </div>
+        <p style="color: #6b7280; margin-bottom: 25px; font-size: 14px;">
+            All ${count} item(s) have been scanned via mobile. Click OK to confirm the order and notify the customer.
+        </p>
+        <button onclick="closeScanPopupAndConfirm()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 40px; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+            OK - Confirm Order
+        </button>
+    `;
+    
+    popup.style.display = 'block';
+}
+
+function closeScanPopupAndConfirm() {
+    let popup = document.getElementById('scan-success-popup');
+    if (popup) {
+        popup.style.opacity = '0';
+        popup.style.transition = 'opacity 0.3s ease-out';
+        setTimeout(() => {
+            popup.style.display = 'none';
+            
+            // Check if all items are scanned and confirm order
+            checkAndConfirmOrder();
+        }, 300);
+    }
+}
+
+function closeScanPopup() {
+    let popup = document.getElementById('scan-success-popup');
+    if (popup) {
+        popup.style.opacity = '0';
+        popup.style.transition = 'opacity 0.3s ease-out';
+        setTimeout(() => {
+            popup.style.display = 'none';
+        }, 300);
+    }
+}
+
+function checkAndConfirmOrder() {
+    // Check if all items are scanned
+    fetch(`/approval/check_scan_status/${orderId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.all_scanned) {
+                // All scanned - approve order immediately
+                approveOrder();
+            } else {
+                // Not all scanned yet - show message
+                alert('Please scan all items before confirming the order.');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking order status:', error);
+        });
+}
+
+function approveOrder() {
+    console.log('Approving order', orderId);
+    
+    // Show loading state
+    let popup = document.getElementById('scan-success-popup');
+    if (popup) {
+        popup.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p style="margin-top: 15px; color: #6b7280;">Confirming order...</p>
+            </div>
+        `;
+    }
+    
+    // Submit approval via AJAX
+    fetch(`/approval/approve_order/${orderId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `order_id=${orderId}`
+    })
+    .then(response => {
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json().then(data => ({ json: true, data: data }));
+        } else {
+            // If not JSON, check if it's a redirect or success
+            if (response.ok || response.redirected) {
+                return { json: false, success: true };
+            } else {
+                return { json: false, success: false };
+            }
+        }
+    })
+    .then(result => {
+        if (result.json) {
+            // JSON response
+            if (result.data.success) {
+                // Close scan popup
+                if (popup) popup.style.display = 'none';
+                
+                // Show order confirmed popup
+                showOrderConfirmedPopup();
+            } else {
+                alert('Error approving order: ' + (result.data.message || 'Unknown error'));
+                if (popup) popup.style.display = 'none';
+            }
+        } else {
+            // Non-JSON response (likely HTML redirect)
+            if (result.success) {
+                // Close scan popup
+                if (popup) popup.style.display = 'none';
+                
+                // Show order confirmed popup
+                showOrderConfirmedPopup();
+                
+                // Redirect after showing popup
+                setTimeout(() => {
+                    window.location.href = '/approval/orders';
+                }, 3000);
+            } else {
+                alert('Error approving order. Please try again.');
+                if (popup) popup.style.display = 'none';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error approving order:', error);
+        alert('Error approving order. Please try again.');
+        if (popup) popup.style.display = 'none';
+    });
+}
+
+// Start polling every 2 seconds
+pollingInterval = setInterval(checkScanStatus, 2000);
+
+// Initial check
+checkScanStatus();
+
+function showOrderConfirmedPopup() {
+    // Show order confirmed popup
+    let confirmedPopup = document.getElementById('order-confirmed-popup');
+    if (!confirmedPopup) {
+        confirmedPopup = document.createElement('div');
+        confirmedPopup.id = 'order-confirmed-popup';
+        confirmedPopup.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 20px; padding: 40px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 4000; animation: popupSlide 0.3s ease-out;';
+        document.body.appendChild(confirmedPopup);
+    }
+    
+    confirmedPopup.innerHTML = `
+        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 40px; color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+            ✓
+        </div>
+        <h2 style="color: #1f2937; margin-bottom: 10px; font-size: 24px; font-weight: 700;">Order Confirmed!</h2>
+        <p style="color: #6b7280; margin-bottom: 20px; font-size: 16px;">
+            All QR codes have been scanned successfully.
+        </p>
+        <p style="color: #065f46; margin-bottom: 25px; font-size: 14px; background: #d1fae5; padding: 12px; border-radius: 8px;">
+            <strong>✓ Customer has been notified!</strong><br>
+            The customer will see a confirmation message in their orders page.
+        </p>
+        <button onclick="closeOrderConfirmedPopup()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%;">
+            OK
+        </button>
+    `;
+    
+    confirmedPopup.style.display = 'block';
+}
+
+function closeOrderConfirmedPopup() {
+    let popup = document.getElementById('order-confirmed-popup');
+    if (popup) {
+        popup.style.opacity = '0';
+        popup.style.transition = 'opacity 0.3s ease-out';
+        setTimeout(() => {
+            popup.style.display = 'none';
+            // Redirect to orders page after closing popup
+            window.location.href = '/approval/orders';
+        }, 300);
+    }
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+});
+</script>
+
+<style>
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+@keyframes popupSlide {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+</style>
+{% endblock %}
+

@@ -10,6 +10,43 @@
     </div>
     
     {% if orders %}
+        {% set confirmed_orders = orders|selectattr('status', 'equalto', 'confirmed')|list %}
+        {% if confirmed_orders|length > 0 %}
+        <div id="order-confirmation-banner" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); animation: slideDown 0.5s ease-out;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h3 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 700;">
+                        🎉 Order Confirmed!
+                    </h3>
+                    <p style="margin: 0; font-size: 16px; opacity: 0.95;">
+                        {% if confirmed_orders|length == 1 %}
+                        Your order has been confirmed! All items have been scanned successfully. Your order is ready!
+                        {% else %}
+                        {{ confirmed_orders|length }} of your orders have been confirmed! All items have been scanned successfully.
+                        {% endif %}
+                    </p>
+                </div>
+                <button onclick="document.getElementById('order-confirmation-banner').style.display='none'" style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                    ✕ Close
+                </button>
+            </div>
+        </div>
+        <style>
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+        {% endif %}
+    {% endif %}
+    
+    {% if orders %}
         <div class="orders-list">
             <table class="orders-table">
                 <thead>
@@ -19,7 +56,7 @@
                         <th>Size</th>
                         <th>Color</th>
                         <th>Quantity</th>
-                        <th>QR Code</th>
+                        <th>Item QR Codes</th>
                         <th>Status</th>
                         <th>Date</th>
                     </tr>
@@ -32,24 +69,50 @@
                             <td>{{ order.size }}</td>
                             <td><span class="color-badge" style="background-color: {{ order.color.lower() }}">{{ order.color }}</span></td>
                             <td>{{ order.quantity }}</td>
-                            <td><code>{{ order.qr_code }}</code></td>
                             <td>
+                                {% if order['items'] %}
+                                <div>
+                                    <strong>Item QR Codes ({{ order['items']|length }}):</strong>
+                                    {% for item in order['items'] %}
+                                    <div class="mt-1">
+                                        <code class="small">{{ item.qr_code }}</code>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <span class="text-muted">No items assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.status == 'confirmed' %}
+                                <div style="margin-bottom: 8px;">
+                                    <span class="status-badge status-{{ order.status }}" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 25px; font-weight: 700; font-size: 14px; display: inline-block;">
+                                        ✓ Order Confirmed
+                                    </span>
+                                </div>
+                                <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 2px solid #10b981; color: #065f46; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-top: 8px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);">
+                                    🎉 <strong>Congratulations!</strong><br>
+                                    Your order has been confirmed! All items have been scanned successfully. Your order is ready!
+                                </div>
+                                {% elif order.status == 'cancelled' %}
                                 <span class="status-badge status-{{ order.status }}">
                                     {{ order.status|title }}
                                 </span>
-                                {% if order.status == 'confirmed' %}
-                                    <p style="color: green; margin-top: 5px; font-size: 0.9em;">
-                                        ✓ Customer confirmed your order!
-                                    </p>
-                                {% elif order.status == 'cancelled' %}
-                                    <p style="color: red; margin-top: 5px; font-size: 0.9em; font-weight: bold;">
-                                        ⚠ Order Cancelled<br>
-                                        Please contact customer support: 1234567890
-                                    </p>
+                                <p style="color: red; margin-top: 5px; font-size: 0.9em; font-weight: bold;">
+                                    ⚠ Order Cancelled<br>
+                                    Please contact customer support: 1234567890
+                                </p>
                                 {% elif order.status == 'pending' %}
-                                    <p style="color: orange; margin-top: 5px; font-size: 0.9em;">
-                                        ⏳ Please wait for Approval Admin to validate your order
-                                    </p>
+                                <span class="status-badge status-{{ order.status }}">
+                                    {{ order.status|title }}
+                                </span>
+                                <p style="color: orange; margin-top: 5px; font-size: 0.9em;">
+                                    ⏳ Please wait for Approval Admin to scan and approve your order
+                                </p>
+                                {% else %}
+                                <span class="status-badge status-{{ order.status }}">
+                                    {{ order.status|title }}
+                                </span>
                                 {% endif %}
                             </td>
                             <td>{{ order.created_at if order.created_at else 'N/A' }}</td>
@@ -69,13 +132,57 @@
                     <li>Review your cart</li>
                     <li>Proceed to checkout</li>
                     <li>Place your order</li>
-                    <li>Wait for Approval Admin to validate your QR code</li>
+                    <li>Wait for Approval Admin to scan and approve your order</li>
                 </ol>
                 <a href="{{ url_for('homepage') }}" class="btn btn-primary">Start Shopping</a>
             </div>
         </div>
     {% endif %}
 </div>
+
+<script>
+// Auto-refresh orders page every 10 seconds to check for order status updates
+let refreshInterval;
+let lastRefresh = Date.now();
+
+function checkOrderStatus() {
+    // Only refresh if page is visible and not recently refreshed
+    if (document.visibilityState === 'visible' && (Date.now() - lastRefresh) > 10000) {
+        // Check if any order status changed
+        fetch('/api/check_order_updates')
+            .then(response => response.json())
+            .then(data => {
+                if (data.has_updates) {
+                    // Reload page to show updated order status
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.log('Could not check order updates:', error);
+            });
+        lastRefresh = Date.now();
+    }
+}
+
+// Start checking for order updates every 10 seconds
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        refreshInterval = setInterval(checkOrderStatus, 10000);
+    });
+} else {
+    refreshInterval = setInterval(checkOrderStatus, 10000);
+}
+
+// Also check immediately on page load
+setTimeout(checkOrderStatus, 2000);
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
 {% endblock %}
 
 

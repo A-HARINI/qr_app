@@ -1,0 +1,53 @@
+================================================================================
+                    HOW TO RUN THIS PROJECT
+================================================================================
+
+SIMPLE STEPS:
+------------
+
+1. Double-click: RUN_THIS.bat
+
+2. Keep the window OPEN (don't close it!)
+
+3. Wait for: "* Running on http://0.0.0.0:5000"
+
+4. Open browser: http://127.0.0.1:5000
+
+That's it!
+
+
+================================================================================
+IF RUN_THIS.bat DOESN'T WORK:
+================================================================================
+
+Option 1: Use QUICK_START.bat (checks everything first)
+Option 2: Use START_HERE_FOR_OUTPUT.bat (simple start)
+
+OR manually:
+
+1. Open Command Prompt (cmd)
+2. Go to project folder:
+   cd E:\QR_APP
+3. Run:
+   python app.py
+4. Open browser: http://127.0.0.1:5000
+
+
+================================================================================
+REQUIREMENTS:
+================================================================================
+
+- Python must be installed
+- Install packages: pip install flask qrcode pillow
+
+
+================================================================================
+NEED HELP?
+================================================================================
+
+See: HOW_TO_RUN.txt (detailed guide)
+See: README_RUN.md (complete documentation)
+
+================================================================================
+
+

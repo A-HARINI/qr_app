@@ -1,0 +1,110 @@
+================================================================================
+                    READ THIS FIRST - CANNOT REACH PAGE FIX
+================================================================================
+
+PROBLEM: "Cannot reach this page" or "Site cannot be reached"
+
+REASON: The Flask server is NOT running!
+
+
+================================================================================
+QUICK FIX (EASIEST):
+================================================================================
+
+Double-click this file: FIX_CANNOT_REACH_PAGE.bat
+
+This will automatically:
+  ✓ Check if server is running
+  ✓ Start the server if needed
+  ✓ Wait for server to start
+  ✓ Open browser automatically
+
+
+================================================================================
+MANUAL FIX (STEP BY STEP):
+================================================================================
+
+STEP 1: Start the Server
+--------------------------
+Double-click: SIMPLE_START.bat
+
+A window will open. Keep it OPEN!
+
+
+STEP 2: Wait for This Message
+------------------------------
+In the server window, wait for:
+  "* Running on http://0.0.0.0:5000"
+
+When you see this, server is ready!
+
+
+STEP 3: Open Browser
+---------------------
+1. Open your browser (Chrome, Firefox, Edge)
+2. Type EXACTLY this in address bar:
+   http://127.0.0.1:5000
+
+IMPORTANT:
+  - Use http:// NOT https://
+  - Use 127.0.0.1 NOT localhost
+  - Use :5000 NOT :5001
+
+
+STEP 4: You Should See
+-----------------------
+The LOGIN PAGE of your QR App
+
+
+================================================================================
+IF STILL NOT WORKING:
+================================================================================
+
+1. Check server window for error messages (red text)
+
+2. Make sure server window shows:
+   "* Running on http://0.0.0.0:5000"
+
+3. Try different browser
+
+4. Wait 10 seconds after starting server
+
+5. Check Windows Firewall:
+   - Windows Security → Firewall → Allow an app
+   - Find Python and allow it
+
+6. Test if Flask works:
+   Double-click: TEST_FLASK_WORKS.bat
+
+
+================================================================================
+FILES TO USE:
+================================================================================
+
+FIX_CANNOT_REACH_PAGE.bat  → Automatic fix (BEST)
+SIMPLE_START.bat           → Start server manually
+CHECK_SERVER.bat           → Check if server is running
+TEST_FLASK_WORKS.bat       → Test if Flask is installed correctly
+
+
+================================================================================
+COMMON MISTAKES:
+================================================================================
+
+❌ Closing the server window → Server stops!
+✅ Keep server window open
+
+❌ Using https:// instead of http://
+✅ Use http://127.0.0.1:5000
+
+❌ Not waiting for server to start
+✅ Wait for "* Running on http://0.0.0.0:5000"
+
+❌ Using wrong URL
+✅ Use exactly: http://127.0.0.1:5000
+
+
+================================================================================
+
+
+
