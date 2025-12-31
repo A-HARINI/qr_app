@@ -1,0 +1,92 @@
+===========================================
+  HOW VALIDATION WORKS IN QR APP
+===========================================
+
+VALIDATION PROCESS:
+-------------------
+
+1. AUTOMATIC VALIDATION WHEN ADMIN CREATES ITEMS
+   -------------------------------------------------
+   Location: app.py lines 683-687, 752-756
+   
+   When admin creates a product with stock:
+   - Each item gets a unique QR code
+   - Items are automatically validated (validated = 1)
+   - validated_at timestamp is set
+   - Items are ready for customer orders immediately
+   
+   Code:
+   INSERT INTO items (product_id, qr_code, status, validated, validated_at) 
+   VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)
+   
+   Result: Items are validated and ready for orders when created.
+
+2. VALIDATION WHEN MOBILE SCANS QR CODE
+   -------------------------------------------------
+   Location: app.py lines 1647-1657
+   
+   When approval admin scans QR code via mobile:
+   - Item is marked as validated (validated = 1)
+   - validated_at timestamp is updated
+   - This happens during the approval process
+   - Used to track which items in an order have been scanned
+   
+   Code:
+   UPDATE items 
+   SET validated = 1, validated_at = CURRENT_TIMESTAMP
+   WHERE qr_code = ? AND validated = 0
+   
+   Result: Item is validated when scanned during order approval.
+
+3. VALIDATION STATUS RESET FOR ORDERS
+   -------------------------------------------------
+   Location: app.py lines 545-552
+   
+   When items are assigned to an order:
+   - validated status is reset to 0
+   - This allows tracking which items in the order have been scanned
+   - Items are re-validated when scanned via mobile during approval
+   
+   Code:
+   UPDATE items 
+   SET status = 'reserved', order_id = ?, validated = 0, validated_at = NULL
+   WHERE id = ?
+   
+   Result: Items start fresh for order tracking.
+
+VALIDATION DATABASE FIELDS:
+---------------------------
+
+In items table:
+- validated (BOOLEAN): 0 = not validated, 1 = validated
+- validated_at (DATETIME): Timestamp when validated
+- validated_by (INTEGER): User ID who validated (optional)
+
+VALIDATION FLOW:
+----------------
+
+1. Admin creates product → Items created with validated = 1
+2. Customer orders → Items reserved, validated reset to 0
+3. Approval admin scans QR → Items validated = 1 (tracked for order)
+4. All items scanned → Order can be confirmed
+
+CURRENT VALIDATION STATUS:
+--------------------------
+
+✅ Items are validated when created by admin
+✅ Items are validated when scanned via mobile
+✅ No validation UI buttons (removed)
+✅ No "pending validation" messages for customers
+✅ Validation happens automatically in the background
+
+VALIDATION ROUTES (Still exist but UI removed):
+-----------------------------------------------
+
+1. /admin/validate_items/<product_id> - Bulk validate (UI removed)
+2. /approval/validate_qr_code - Validate via scanner (still available)
+3. /scan/item/<qr_code> - Auto-validates when scanned
+
+NOTE: Validation happens automatically - no manual validation needed!
+
+===========================================
+
