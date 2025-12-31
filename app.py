@@ -537,10 +537,7 @@ def checkout():
                 cursor.close()
                 conn.close()
                 
-                if unvalidated > 0:
-                    flash(f'Insufficient validated items. Available validated: {len(available_items)}, Requested: {item["quantity"]}. Please wait for approval admin to validate QR codes.', 'error')
-                else:
-                    flash(f'Insufficient stock for product. Available items: {len(available_items)}, Requested: {item["quantity"]}', 'error')
+                flash(f'Insufficient stock for product. Available items: {len(available_items)}, Requested: {item["quantity"]}', 'error')
                 return redirect(url_for('cart'))
             
             # Reserve validated items and reset validated status (will be set when scanned via mobile for this order)
