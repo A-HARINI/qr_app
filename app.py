@@ -1206,15 +1206,26 @@ def scan_order_qr(order_id):
         return redirect(url_for('approval_orders'))
     
     # Generate QR code images with scan URLs
-    # Get the actual server URL - use request.host which includes the IP address
-    # Check if we have a custom server URL in environment variable
+    # Get the actual server URL - prioritize Railway/public URL over local IP
+    # Check if running on Railway (has RAILWAY_ENVIRONMENT or PORT env var)
+    is_railway = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_SERVICE_NAME')
+    
+    # Check for custom server URL first (highest priority)
     server_url = os.environ.get('SERVER_URL')
     
     if server_url:
         # Use custom server URL if provided (for production or specific network setup)
         base_url = server_url.rstrip('/')
+        print(f"DEBUG: Using custom SERVER_URL: {base_url}")
+    elif is_railway:
+        # On Railway, use the public Railway URL from request
+        base_url = request.url_root.rstrip('/')
+        # Remove any port numbers as Railway handles that
+        if ':5000' in base_url:
+            base_url = base_url.replace(':5000', '')
+        print(f"DEBUG: Using Railway URL: {base_url}")
     else:
-        # Use request URL but replace localhost/127.0.0.1 with actual network IP
+        # Local development - use request URL but replace localhost/127.0.0.1 with actual network IP
         base_url = request.host_url.rstrip('/')
         
         # Always detect and use the network IP for mobile access (even if accessed via IP)
