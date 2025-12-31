@@ -1,0 +1,110 @@
+===========================================
+  RAILWAY DEPLOYMENT CHECKLIST
+===========================================
+
+✅ ALREADY CONFIGURED (Ready to Deploy):
+----------------------------------------
+
+1. ✅ railway.json
+   - Builder: NIXPACKS (auto-detects Python)
+   - Start Command: gunicorn app:app --bind 0.0.0.0:$PORT
+   - Workers: 2, Threads: 2, Timeout: 120
+
+2. ✅ Procfile
+   - Web process: gunicorn app:app --bind 0.0.0.0:$PORT
+
+3. ✅ requirements.txt
+   - Flask==2.3.3
+   - gunicorn==21.2.0
+   - qrcode[pil]==7.4.2
+   - Pillow==10.1.0
+   - requests==2.31.0
+
+4. ✅ app.py
+   - Configured for Railway (uses PORT env variable)
+   - Database: SQLite (auto-created)
+   - No hardcoded ports
+
+5. ✅ Code pushed to GitHub
+   - Repository: https://github.com/A-HARINI/qr_app.git
+   - Branch: main
+   - All validation UI removed
+
+===========================================
+  DEPLOYMENT STEPS (Do This Now):
+===========================================
+
+STEP 1: Go to Railway Dashboard
+-------------------------------
+https://railway.app
+Sign in with GitHub account
+
+STEP 2: Create/Select Project
+------------------------------
+- Click "New Project"
+- OR select existing project if you have one
+
+STEP 3: Connect GitHub Repository
+---------------------------------
+- Click "Deploy from GitHub repo"
+- Select: A-HARINI/qr_app
+- Select branch: main
+
+STEP 4: Railway Auto-Deploys
+-----------------------------
+Railway will automatically:
+✓ Detect Python runtime
+✓ Install dependencies from requirements.txt
+✓ Use Procfile/railway.json for start command
+✓ Create SQLite database
+✓ Deploy your app
+
+STEP 5: Get Your App URL
+------------------------
+- Railway provides public URL after deployment
+- Example: https://your-app-name.up.railway.app
+- You can set custom domain if needed
+
+STEP 6: Verify Deployment
+--------------------------
+- Check Railway logs for any errors
+- Visit your app URL
+- Test login and functionality
+
+===========================================
+  OPTIONAL: Environment Variables
+===========================================
+
+You can add these in Railway dashboard → Variables:
+
+1. FLASK_ENV=production (optional)
+2. SECRET_KEY=your-secret-key (optional, for production)
+
+Note: Railway automatically sets PORT variable - don't change it!
+
+===========================================
+  TROUBLESHOOTING
+===========================================
+
+If deployment fails:
+1. Check Railway build logs
+2. Verify requirements.txt has all dependencies
+3. Check that app.py doesn't have hardcoded ports
+4. Ensure database initialization works
+
+If app crashes:
+1. Check Railway runtime logs
+2. Verify gunicorn is installed (it is in requirements.txt)
+3. Check database file permissions
+
+===========================================
+  CURRENT STATUS
+===========================================
+
+✅ All files ready
+✅ Code pushed to GitHub
+✅ No validation UI (only Scan & Approve)
+✅ Railway configuration complete
+
+READY TO DEPLOY! 🚀
+
