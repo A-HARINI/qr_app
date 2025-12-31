@@ -969,10 +969,7 @@ def admin_items(product_id):
         'damaged': sum(1 for item in items if item['status'] == 'damaged')
     }
     
-    # Count unvalidated items for the template
-    unvalidated_count = sum(1 for item in items if not item.get('validated') or item.get('validated') == 0)
-    
-    return render_template('admin/items.html', product=product, items=items, status_counts=status_counts, unvalidated_count=unvalidated_count)
+    return render_template('admin/items.html', product=product, items=items, status_counts=status_counts)
 
 @app.route('/admin/validate_items/<int:product_id>', methods=['POST'])
 def validate_items_bulk(product_id):

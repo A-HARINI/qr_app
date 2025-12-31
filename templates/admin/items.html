@@ -49,13 +49,6 @@
     <div class="card">
         <div class="card-header">
             <h5>All Items ({{ items|length }} total)</h5>
-            {% if unvalidated_count > 0 %}
-            <form method="POST" action="{{ url_for('validate_items_bulk', product_id=product.id) }}" style="display: inline-block; margin-left: 10px;" onsubmit="return confirm('Validate all {{ unvalidated_count }} unvalidated items for this product?');">
-                <button type="submit" class="btn btn-sm btn-success">
-                    ✓ Validate All Unvalidated Items ({{ unvalidated_count }})
-                </button>
-            </form>
-            {% endif %}
         </div>
         <div class="card-body">
             {% if items %}
@@ -101,11 +94,6 @@
                                 <a href="{{ url_for('generate_item_qr', item_id=item.id) }}" class="btn btn-sm btn-primary" target="_blank">
                                     <i class="bi bi-qr-code"></i> View QR Code
                                 </a>
-                                {% if item.validated %}
-                                    <span class="badge bg-success">✓ Validated</span>
-                                {% else %}
-                                    <span class="badge bg-warning">⚠ Not Validated</span>
-                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
